@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casa de Carnes | Cardápio Online</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header-fixo">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="logo">🥩 CASA DE CARNES</h1>
+                    <span class="subtitulo">Carnes de qualidade</span>
+                </div>
+                <button class="btn-carrinho-header" onclick="abrirCarrinho()">
+                    <i class="bi bi-cart3"></i>
+                    <span class="badge-carrinho" id="badge-carrinho">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- BUSCA -->
+    <section class="busca-area">
+        <div class="container">
+            <div class="busca-wrapper">
+                <i class="bi bi-search"></i>
+                <input type="text" id="busca" placeholder="Buscar corte..." oninput="filtrarProdutos()">
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORIAS -->
+    <nav class="categorias-nav">
+        <div class="container">
+            <div class="categorias-scroll" id="categorias-scroll"></div>
+        </div>
+    </nav>
+
+    <!-- PRODUTOS -->
+    <main class="container my-4">
+        <div id="loading" class="text-center py-5">
+            <div class="spinner-border text-danger" role="status"></div>
+            <p class="mt-3 text-muted">Carregando produtos...</p>
+        </div>
+        <div id="produtos-container"></div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container text-center">
+            <p class="mb-1"><i class="bi bi-whatsapp"></i> (15) 99818-3052</p>
+            <p class="small mb-0">© 2026 Casa de Carnes. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- ============ MODAL ADICIONAR (PESO) ============ -->
+    <div class="modal fade" id="modalPeso" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar ao Carrinho</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="produto-modal-info">
+                        <img id="modal-produto-imagem" src="" alt="">
+                        <div>
+                            <h5 id="modal-produto-nome"></h5>
+                            <p id="modal-produto-preco" class="text-muted mb-0"></p>
+                        </div>
+                    </div>
+
+                    <!-- Seletor de unidade (só para kg) -->
+                    <div id="modal-unidade-wrapper" class="mt-3">
+                        <label class="form-label fw-bold">Como deseja informar?</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="unidade" id="unidade-g" value="g" checked onchange="atualizarCalculo()">
+                            <label class="btn btn-outline-danger" for="unidade-g">Gramas (g)</label>
+
+                            <input type="radio" class="btn-check" name="unidade" id="unidade-kg" value="kg" onchange="atualizarCalculo()">
+                            <label class="btn btn-outline-danger" for="unidade-kg">Quilos (kg)</label>
+                        </div>
+                    </div>
+
+                    <!-- Quantidade -->
+                    <div class="mt-3">
+                        <label class="form-label fw-bold" id="modal-qtd-label">Quantidade (g)</label>
+                        <input type="number" class="form-control form-control-lg" id="modal-quantidade" 
+                               placeholder="Ex: 500" min="0" step="1" oninput="atualizarCalculo()">
+                        <div class="qtd-rapida mt-2">
+                            <button type="button" class="btn-qtd-rapida" onclick="setQtd(250)">250g</button>
+                            <button type="button" class="btn-qtd-rapida" onclick="setQtd(500)">500g</button>
+                            <button type="button" class="btn-qtd-rapida" onclick="setQtd(1000)">1kg</button>
+                            <button type="button" class="btn-qtd-rapida" onclick="setQtd(2000)">2kg</button>
+                        </div>
+                    </div>
+
+                    <!-- Subtotal -->
+                    <div class="modal-subtotal mt-3">
+                        <span>Subtotal:</span>
+                        <strong id="modal-subtotal">R$ 0,00</strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger fw-bold" onclick="confirmarAdicao()">
+                        <i class="bi bi-cart-plus"></i> Adicionar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ CARRINHO LATERAL ============ -->
+    <div class="carrinho-overlay" id="carrinho-overlay" onclick="fecharCarrinho()"></div>
+
+    <aside class="carrinho-lateral" id="carrinho-lateral">
+        <div class="carrinho-header">
+            <h3><i class="bi bi-cart3"></i> Seu Pedido</h3>
+            <button class="btn-fechar-carrinho" onclick="fecharCarrinho()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="carrinho-body" id="carrinho-body"></div>
+
+        <div class="carrinho-footer" id="carrinho-footer">
+            <div class="resumo-carrinho">
+                <div class="linha-total">
+                    <span>Total</span>
+                    <strong id="carrinho-total">R$ 0,00</strong>
+                </div>
+            </div>
+            <button class="btn-finalizar" onclick="finalizarPedido()">
+                <i class="bi bi-whatsapp"></i> Finalizar no WhatsApp
+            </button>
+        </div>
+    </aside>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
