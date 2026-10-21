@@ -1,6 +1,5 @@
 // ============================================
-// CASA DE CARNES - CARDÁPIO ONLINE
-// Com sistema de carrinho e conversão de peso
+// CASA DE CARNE H&S - CARDÁPIO ONLINE
 // ============================================
 
 const firebaseConfig = {
@@ -16,18 +15,18 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const WHATSAPP = "5515998183052";
+const WHATSAPP = "5515998183052"; // Insira o número correto aqui
+const CHAVE_PIX = "00.000.000/0000-00"; // Insira a chave PIX aqui
+
 let categorias = [];
 let produtos = [];
 let carrinho = [];
-let produtoAtual = null; // Produto sendo adicionado no modal
+let produtoAtual = null;
 
 // ============================================
-// CARREGAR DADOS DO FIREBASE
+// CARREGAR DADOS
 // ============================================
 function carregarDados() {
-    console.log('🔄 Carregando dados do Firebase...');
-
     db.ref('Category').once('value')
         .then(snapCat => {
             categorias = [];
@@ -38,11 +37,8 @@ function carregarDados() {
                     imagem: c.val().image || ''
                 });
             });
-
             categorias.sort((a, b) => a.id.localeCompare(b.id));
-            console.log('✅ Categorias:', categorias.length);
             renderizarNavCategorias();
-
             return db.ref('Foods').once('value');
         })
         .then(snapProd => {
@@ -63,80 +59,49 @@ function carregarDados() {
                     });
                 }
             });
-
-            console.log('✅ Produtos:', produtos.length);
             renderizarProdutos();
             document.getElementById('loading').style.display = 'none';
-
-            // Carregar carrinho salvo
             carregarCarrinhoSalvo();
         })
         .catch(err => {
-            console.error('❌ Erro:', err);
+            console.error('Erro:', err);
             document.getElementById('loading').innerHTML =
-                '<div class="alert alert-danger">Erro ao carregar produtos. Verifique a conexão.</div>';
+                '<div class="alert alert-danger">Erro ao carregar produtos.</div>';
         });
 }
 
 // ============================================
-// CONVERSOR DE PREÇO
-// "29,99 kg" → { valor: 29.99, unidade: 'kg' }
-// "3,99 un"  → { valor: 3.99,  unidade: 'un' }
-// "69,99"    → { valor: 69.99, unidade: 'kg' } (padrão)
+// PARSER DE PREÇO
 // ============================================
 function parsePreco(precoStr) {
-    if (!precoStr || precoStr.trim() === '') {
-        return { valor: 0, unidade: 'kg' };
-    }
-
+    if (!precoStr || precoStr.trim() === '') return { valor: 0, unidade: 'kg' };
     let str = String(precoStr).replace(/\$/g, '').trim();
-
-    // Detecta unidade
     let unidade = 'kg';
-    if (/\bun\b/i.test(str) || /unidade/i.test(str)) {
-        unidade = 'un';
-    } else if (/\bkg\b/i.test(str)) {
-        unidade = 'kg';
-    }
-
-    // Extrai número (aceita vírgula ou ponto)
-    let nums = str.replace(/[^\d,.]/g, '').trim();
-    nums = nums.replace(',', '.');
+    if (/\bun\b/i.test(str) || /unidade/i.test(str)) unidade = 'un';
+    else if (/\bkg\b/i.test(str)) unidade = 'kg';
+    let nums = str.replace(/[^\d,.]/g, '').trim().replace(',', '.');
     let valor = parseFloat(nums);
     if (isNaN(valor)) valor = 0;
-
     return { valor, unidade };
 }
 
 // ============================================
-// NAVEGAÇÃO DE CATEGORIAS
+// NAV CATEGORIAS
 // ============================================
 function renderizarNavCategorias() {
     const container = document.getElementById('categorias-scroll');
     if (!container) return;
-
     let html = '<button class="categoria-chip ativo" onclick="scrollParaCategoria(\'todos\', this)">Todos</button>';
-
     categorias.forEach(cat => {
-        html += `
-            <button class="categoria-chip" onclick="scrollParaCategoria('${cat.id}', this)">
-                ${cat.nome}
-            </button>
-        `;
+        html += `<button class="categoria-chip" onclick="scrollParaCategoria('${cat.id}', this)">${cat.nome}</button>`;
     });
-
     container.innerHTML = html;
 }
 
 function scrollParaCategoria(id, btn) {
     document.querySelectorAll('.categoria-chip').forEach(c => c.classList.remove('ativo'));
     if (btn) btn.classList.add('ativo');
-
-    if (id === 'todos') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-    }
-
+    if (id === 'todos') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     const secao = document.getElementById('secao-' + id);
     if (secao) secao.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -158,42 +123,36 @@ function renderizarProdutos(filtro = '') {
             const matchBusca = termo === '' || p.nome.toLowerCase().includes(termo);
             return matchCat && matchBusca;
         });
-
         if (produtosCat.length === 0) return;
-
         total += produtosCat.length;
 
         html += `
             <section class="categoria-secao" id="secao-${cat.id}">
                 <h2 class="categoria-titulo">${cat.nome}</h2>
-                <div class="row g-3">
+                <div class="lista-produtos">
         `;
 
         produtosCat.forEach(prod => {
             const precoExibir = prod.precoNumerico > 0
-                ? `R$ ${prod.precoNumerico.toFixed(2).replace('.', ',')}${prod.unidade === 'kg' ? ' /kg' : ' /un'}`
+                ? `R$ ${prod.precoNumerico.toFixed(2).replace('.', ',')} <small>${prod.unidade === 'kg' ? '/kg' : '/un'}</small>`
                 : 'Consulte';
-            
             const podeAdicionar = prod.precoNumerico > 0;
 
             html += `
-                <div class="col-6 col-md-4 col-lg-3">
-                    <div class="produto-card">
-                        <img src="${prod.imagem}" alt="${prod.nome}" class="produto-imagem" loading="lazy"
-                             onerror="this.src='https://placehold.co/300x200/eeeeee/999999?text=Sem+Foto'">
-                        <div class="produto-info">
-                            <h3 class="produto-nome">${prod.nome}</h3>
-                            <div class="produto-preco">${precoExibir}</div>
-                            ${podeAdicionar 
-                                ? `<button class="btn-pedir" onclick="abrirModalPeso('${prod.id}')">
-                                    <i class="bi bi-cart-plus"></i> Adicionar
-                                   </button>`
-                                : `<button class="btn-pedir" style="opacity:0.5;cursor:not-allowed;" disabled>
-                                    <i class="bi bi-x-circle"></i> Indisponível
-                                   </button>`
-                            }
-                        </div>
+                <div class="produto-card">
+                    <img src="${prod.imagem}" alt="${prod.nome}" class="produto-imagem" loading="lazy" onerror="this.src='https://placehold.co/150x150/eeeeee/999999?text=Sem+Foto'">
+                    <div class="produto-info">
+                        <h3 class="produto-nome">${prod.nome}</h3>
+                        <div class="produto-preco">${precoExibir}</div>
                     </div>
+                    ${podeAdicionar 
+                        ? `<button class="btn-adicionar" onclick="abrirModalPeso('${prod.id}')">
+                            <i class="bi bi-plus-lg"></i>
+                           </button>`
+                        : `<button class="btn-adicionar" style="background:#ccc;cursor:not-allowed;" disabled>
+                            <i class="bi bi-x"></i>
+                           </button>`
+                    }
                 </div>
             `;
         });
@@ -204,7 +163,7 @@ function renderizarProdutos(filtro = '') {
     if (total === 0) {
         html = `
             <div class="sem-produtos">
-                <i class="bi bi-search"></i>
+                <i class="bi bi-search" style="font-size:3rem;color:#ddd;display:block;margin-bottom:10px;"></i>
                 <h4>Nenhum produto encontrado</h4>
                 <p>Tente buscar por outro nome</p>
             </div>
@@ -228,13 +187,11 @@ function abrirModalPeso(produtoId) {
 
     produtoAtual = prod;
 
-    // Preenche dados do modal
     document.getElementById('modal-produto-imagem').src = prod.imagem;
     document.getElementById('modal-produto-nome').textContent = prod.nome;
     document.getElementById('modal-produto-preco').textContent = 
         `R$ ${prod.precoNumerico.toFixed(2).replace('.', ',')}${prod.unidade === 'kg' ? ' /kg' : ' /un'}`;
 
-    // Se for unidade, esconde o seletor de g/kg
     const wrapperUnidade = document.getElementById('modal-unidade-wrapper');
     const labelQtd = document.getElementById('modal-qtd-label');
 
@@ -251,11 +208,9 @@ function abrirModalPeso(produtoId) {
         document.getElementById('unidade-g').checked = true;
     }
 
-    // Limpa quantidade
     document.getElementById('modal-quantidade').value = '';
     document.getElementById('modal-subtotal').textContent = 'R$ 0,00';
 
-    // Abre modal
     new bootstrap.Modal(document.getElementById('modalPeso')).show();
 }
 
@@ -270,7 +225,6 @@ function setQtd(valor) {
     } else {
         input.value = valor / 1000;
     }
-
     atualizarCalculo();
 }
 
@@ -283,7 +237,6 @@ function atualizarCalculo() {
         ? 'un' 
         : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
 
-    // Atualiza label
     if (produtoAtual.unidade === 'un') {
         labelQtd.textContent = 'Quantidade (unidades)';
     } else {
@@ -294,7 +247,7 @@ function atualizarCalculo() {
     let quantidadeKg = 0;
 
     if (produtoAtual.unidade === 'un') {
-        quantidadeKg = qtdDigitada; // só usa direto (não é peso)
+        quantidadeKg = qtdDigitada;
     } else if (unidade === 'g') {
         quantidadeKg = qtdDigitada / 1000;
     } else {
@@ -337,7 +290,6 @@ function confirmarAdicao() {
 
     const subtotal = produtoAtual.precoNumerico * quantidadeKg;
 
-    // Adiciona ao carrinho
     const item = {
         id: produtoAtual.id,
         nome: produtoAtual.nome,
@@ -353,10 +305,7 @@ function confirmarAdicao() {
     salvarCarrinho();
     atualizarCarrinho();
 
-    // Fecha modal
     bootstrap.Modal.getInstance(document.getElementById('modalPeso')).hide();
-
-    // Toast
     mostrarToast(`${produtoAtual.nome} adicionado!`);
 }
 
@@ -399,8 +348,7 @@ function atualizarCarrinho() {
 
         html += `
             <div class="item-carrinho">
-                <img src="${item.imagem}" alt="${item.nome}"
-                     onerror="this.src='https://placehold.co/100x100/eeeeee/999999?text=?'">
+                <img src="${item.imagem}" alt="${item.nome}" onerror="this.src='https://placehold.co/100x100/eeeeee/999999?text=?'">
                 <div class="item-carrinho-info">
                     <h5>${item.nome}</h5>
                     <div class="item-qtd">${item.quantidadeExibir}</div>
@@ -441,7 +389,7 @@ function fecharCarrinho() {
 // ============================================
 function salvarCarrinho() {
     try {
-        localStorage.setItem('carrinho_acougue', JSON.stringify(carrinho));
+        localStorage.setItem('carrinho_hs', JSON.stringify(carrinho));
     } catch (e) {
         console.error('Erro ao salvar carrinho:', e);
     }
@@ -449,7 +397,7 @@ function salvarCarrinho() {
 
 function carregarCarrinhoSalvo() {
     try {
-        const salvo = localStorage.getItem('carrinho_acougue');
+        const salvo = localStorage.getItem('carrinho_hs');
         if (salvo) {
             carrinho = JSON.parse(salvo);
             atualizarCarrinho();
@@ -460,7 +408,27 @@ function carregarCarrinhoSalvo() {
 }
 
 // ============================================
-// FINALIZAR PEDIDO
+// NAVEGAÇÃO DE TELAS (NOVO)
+// ============================================
+function entrarNaLoja() {
+    document.getElementById('tela-home').style.opacity = '0';
+    setTimeout(() => {
+        document.getElementById('tela-home').style.display = 'none';
+        document.getElementById('app-principal').classList.remove('app-escondido');
+        window.scrollTo(0, 0);
+    }, 300);
+}
+
+function voltarParaHome() {
+    document.getElementById('app-principal').classList.add('app-escondido');
+    document.getElementById('tela-home').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('tela-home').style.opacity = '1';
+    }, 50);
+}
+
+// ============================================
+// FINALIZAR PEDIDO (COM PIX ZERO CUSTO)
 // ============================================
 function finalizarPedido() {
     if (carrinho.length === 0) {
@@ -469,7 +437,7 @@ function finalizarPedido() {
     }
 
     let total = 0;
-    let mensagem = `*🥩 NOVO PEDIDO - CASA DE CARNES*%0A%0A`;
+    let mensagem = `*🥩 NOVO PEDIDO - CASA DE CARNE H&S*%0A%0A`;
     mensagem += `━━━━━━━━━━━━━━━━━━%0A`;
     mensagem += `*🛒 ITENS DO PEDIDO*%0A`;
 
@@ -487,6 +455,11 @@ function finalizarPedido() {
     mensagem += `%0A━━━━━━━━━━━━━━━━━━%0A`;
     mensagem += `*💰 TOTAL: R$ ${total.toFixed(2).replace('.', ',')}*%0A`;
     mensagem += `━━━━━━━━━━━━━━━━━━%0A%0A`;
+    
+    mensagem += `*💳 PAGAMENTO VIA PIX*%0A`;
+    mensagem += `Chave PIX: *${CHAVE_PIX}*%0A`;
+    mensagem += `Favorecido: Casa de Carne H&S%0A%0A`;
+    mensagem += `📸 *Após pagar, envie o comprovante nesta conversa para confirmarmos seu pedido!*%0A%0A`;
     mensagem += `📍 Por favor, informe seu endereço de entrega:`;
 
     const url = `https://wa.me/${WHATSAPP}?text=${mensagem}`;
@@ -499,27 +472,18 @@ function finalizarPedido() {
 function mostrarToast(texto) {
     const toast = document.createElement('div');
     toast.style.cssText = `
-        position: fixed;
-        top: 90px;
-        right: 20px;
-        background: #27ae60;
-        color: #fff;
-        padding: 15px 25px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        z-index: 2000;
-        font-weight: 600;
-        transform: translateX(400px);
-        transition: transform 0.35s ease;
-        max-width: 320px;
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+        background: #25D366; color: #fff; padding: 12px 24px; border-radius: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 2000; font-weight: 600;
+        font-size: 0.9rem; transition: transform 0.3s ease; white-space: nowrap;
     `;
     toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${texto}`;
     document.body.appendChild(toast);
 
-    setTimeout(() => toast.style.transform = 'translateX(0)', 10);
+    setTimeout(() => toast.style.transform = 'translateX(-50%) translateY(20px)', 10);
     setTimeout(() => {
-        toast.style.transform = 'translateX(400px)';
-        setTimeout(() => toast.remove(), 350);
+        toast.style.transform = 'translateX(-50%) translateY(-100px)';
+        setTimeout(() => toast.remove(), 300);
     }, 2500);
 }
 
