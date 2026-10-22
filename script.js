@@ -50,11 +50,12 @@ window.voltarParaHome = function() {
     setTimeout(() => { telaHome.style.opacity = '1'; }, 50);
 }
 
-// Abre o Sobre Nós de forma forçada e independente
 window.abrirSobreNos = function() {
-    const modalEl = document.getElementById('modalSobre');
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
+    document.getElementById('modalSobre').classList.add('show');
+}
+
+window.fecharSobreNos = function() {
+    document.getElementById('modalSobre').classList.remove('show');
 }
 
 // ============================================
