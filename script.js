@@ -279,7 +279,7 @@ window.confirmarAdicao = function() {
 }
 
 // ============================================
-// CARRINHO (Com Corte e Obs)
+// CARRINHO
 // ============================================
 function atualizarCarrinho() {
     const badge = document.getElementById('badge-carrinho');
@@ -361,7 +361,7 @@ function carregarCarrinhoSalvo() {
 }
 
 // ============================================
-// FINALIZAR PEDIDO (WhatsApp + PIX + Corte + Obs)
+// FINALIZAR PEDIDO (WhatsApp + PIX)
 // ============================================
 window.finalizarPedido = function() {
     if (carrinho.length === 0) { alert('Seu carrinho está vazio!'); return; }
@@ -403,7 +403,7 @@ window.finalizarPedido = function() {
 }
 
 // ============================================
-// TOAST
+// TOAST (NOTIFICAÇÃO)
 // ============================================
 function mostrarToast(texto) {
     const toast = document.createElement('div');

@@ -141,3 +141,37 @@ body {
 .carrinho-vazio { text-align: center; padding: 50px 20px; color: var(--texto-suave); }
 .carrinho-vazio i { font-size: 3rem; color: #ddd; display: block; margin-bottom: 10px; }
 .sem-produtos { text-align: center; padding: 50px 20px; color: var(--texto-suave); }
+
+/* NOVAS CLASSES: HORÁRIOS E PAGAMENTOS */
+.info-box {
+    background: var(--cinza-claro);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 10px;
+    padding: 12px 15px;
+}
+.info-box h6 {
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.lista-info {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.82rem;
+}
+.lista-info li {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    color: var(--texto);
+}
+.lista-info li:last-child {
+    margin-bottom: 0;
+}
+.lista-info li i {
+    margin-right: 5px;
+}

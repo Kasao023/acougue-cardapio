@@ -48,17 +48,42 @@
                     <h5 class="modal-title"><i class="bi bi-shop"></i> Sobre a H&S</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body text-center">
-                    <img src="casadecarnehs.png" alt="Logo H&S" style="width: 120px; border-radius: 50%; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                    <p style="font-size: 0.92rem; line-height: 1.6; text-align: justify; margin-bottom: 10px;">
-                        A <strong>Casa de Carnes H&S</strong> há mais de <strong>XX anos</strong> (troque pelo número de anos) oferece aos seus clientes cortes diferenciados.
+                <div class="modal-body">
+                    <!-- Logo -->
+                    <div class="text-center mb-3">
+                        <img src="casadecarnehs.png" alt="Logo H&S" style="width: 120px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    </div>
+                    
+                    <!-- Texto Sobre -->
+                    <p style="font-size: 0.9rem; line-height: 1.5; text-align: justify; margin-bottom: 10px;">
+                        A <strong>Casa de Carnes H&S</strong> há mais de <strong>XX anos</strong> oferece aos seus clientes cortes diferenciados.
                     </p>
-                    <p style="font-size: 0.92rem; line-height: 1.6; text-align: justify; margin-bottom: 10px;">
-                        Somos uma empresa familiar com simplicidade, humildade, qualidade e parceria. Nossa missão é comercializar os melhores produtos e serviços de carnes com excelência, oferecendo o melhor atendimento ao cliente.
+                    <p style="font-size: 0.9rem; line-height: 1.5; text-align: justify; margin-bottom: 10px;">
+                        Somos uma empresa familiar com simplicidade, humildade, qualidade e parceria. Nossa missão é comercializar os melhores produtos e serviços de carnes com excelência.
                     </p>
-                    <p style="font-size: 0.92rem; line-height: 1.6; text-align: justify; font-weight: 600; color: var(--vermelho);">
+                    <p style="font-size: 0.9rem; line-height: 1.5; text-align: justify; font-weight: 600; color: var(--vermelho); margin-bottom: 20px;">
                         Compromisso, qualidade e preço bom para nossos clientes!
                     </p>
+
+                    <!-- HORÁRIOS -->
+                    <div class="info-box">
+                        <h6><i class="bi bi-clock-history text-danger"></i> Horário de Atendimento</h6>
+                        <ul class="lista-info">
+                            <li><span>Segunda a Sexta:</span> <strong>08:00 às 19:00</strong></li>
+                            <li><span>Sábado:</span> <strong>08:00 às 18:00</strong></li>
+                            <li><span>Domingo:</span> <strong>Fechado</strong></li>
+                        </ul>
+                    </div>
+
+                    <!-- PAGAMENTOS -->
+                    <div class="info-box mt-3">
+                        <h6><i class="bi bi-credit-card text-danger"></i> Formas de Pagamento</h6>
+                        <ul class="lista-info">
+                            <li><i class="bi bi-check-circle-fill text-success"></i> PIX (CNPJ)</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Cartão de Crédito / Débito</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Dinheiro na entrega</li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger w-100 fw-bold" data-bs-dismiss="modal">Voltar ao Início</button>
@@ -117,8 +142,8 @@
         <button class="nav-item" onclick="alert('Área de pedidos em breve!')">
             <i class="bi bi-receipt"></i><span>Pedidos</span>
         </button>
-        <button class="nav-item" onclick="alert('Área de perfil em breve!')">
-            <i class="bi bi-person"></i><span>Perfil</span>
+        <button class="nav-item" onclick="window.abrirSobreNos()">
+            <i class="bi bi-info-circle"></i><span>Sobre</span>
         </button>
     </nav>
 
