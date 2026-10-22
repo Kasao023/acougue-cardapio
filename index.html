@@ -23,7 +23,6 @@
         <!-- Logo e Botões -->
         <div class="home-conteudo">
             <div class="home-logo">
-                <!-- Logo da empresa -->
                 <img src="casadecarnehs.png" alt="Casa de Carne H&S" class="logo-img">
                 <p class="mt-3">Qualidade & Preço Bom!</p>
             </div>
@@ -35,15 +34,44 @@
             <div class="home-cidade">Cosmópolis - SP</div>
 
             <div class="home-botoes">
+                <!-- Botões chamando a função diretamente via JS -->
                 <button class="btn-home" onclick="entrarNaLoja()">
                     <i class="bi bi-bicycle"></i> DELIVERY
                 </button>
                 <button class="btn-home" onclick="entrarNaLoja()">
                     <i class="bi bi-shop"></i> RETIRADA
                 </button>
-                <button class="btn-home btn-sobre" onclick="alert('Em breve!')">
+                <button class="btn-home btn-sobre" onclick="abrirSobreNos()">
                     <i class="bi bi-info-circle"></i> SOBRE NÓS
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL SOBRE NÓS ============ -->
+    <div class="modal fade" id="modalSobre" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content modal-add">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-shop"></i> Sobre a H&S</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="casadecarnehs.png" alt="Logo H&S" style="width: 120px; border-radius: 50%; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    
+                    <p style="font-size: 0.92rem; line-height: 1.6; text-align: justify; margin-bottom: 10px;">
+                        A <strong>Casa de Carnes H&S</strong> há mais de <strong>XX anos</strong> (troque pelo número de anos) oferece aos seus clientes cortes diferenciados.
+                    </p>
+                    <p style="font-size: 0.92rem; line-height: 1.6; text-align: justify; margin-bottom: 10px;">
+                        Somos uma empresa familiar com simplicidade, humildade, qualidade e parceria. Nossa missão é comercializar os melhores produtos e serviços de carnes com excelência, oferecendo o melhor atendimento ao cliente.
+                    </p>
+                    <p style="font-size: 0.92rem; line-height: 1.6; text-align: justify; font-weight: 600; color: var(--vermelho);">
+                        Compromisso, qualidade e preço bom para nossos clientes!
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger w-100 fw-bold" data-bs-dismiss="modal">Voltar ao Início</button>
+                </div>
             </div>
         </div>
     </div>
@@ -82,7 +110,14 @@
         </nav>
 
         <!-- PRODUTOS -->
-        <main class="container my-3 main-content">
+        <main class="container my-2 main-content">
+            
+            <!-- AVISO DE VARIAÇÃO DE PREÇO -->
+            <div class="aviso-preco">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <p><strong>Aviso Importante:</strong> Os valores dos produtos podem sofrer alterações diárias devido à variação do mercado. O valor final será confirmado no momento da entrega ou retirada.</p>
+            </div>
+
             <div id="loading" class="text-center py-5">
                 <div class="spinner-border text-danger" role="status"></div>
                 <p class="mt-3 text-muted">Carregando produtos...</p>

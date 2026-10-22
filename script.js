@@ -15,8 +15,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const WHATSAPP = "5515998183052"; // Insira o número correto aqui
-const CHAVE_PIX = "00.000.000/0000-00"; // Insira a chave PIX aqui
+const WHATSAPP = "5515998183052"; // <-- COLOQUE O NÚMERO CORRETO AQUI
+const CHAVE_PIX = "00.000.000/0000-00"; // <-- COLOQUE A CHAVE PIX REAL AQUI
 
 let categorias = [];
 let produtos = [];
@@ -24,7 +24,7 @@ let carrinho = [];
 let produtoAtual = null;
 
 // ============================================
-// CARREGAR DADOS
+// CARREGAR DADOS DO FIREBASE
 // ============================================
 function carregarDados() {
     db.ref('Category').once('value')
@@ -66,12 +66,12 @@ function carregarDados() {
         .catch(err => {
             console.error('Erro:', err);
             document.getElementById('loading').innerHTML =
-                '<div class="alert alert-danger">Erro ao carregar produtos.</div>';
+                '<div class="alert alert-danger">Erro ao carregar produtos. Verifique a conexão.</div>';
         });
 }
 
 // ============================================
-// PARSER DE PREÇO
+// CONVERSOR DE PREÇO
 // ============================================
 function parsePreco(precoStr) {
     if (!precoStr || precoStr.trim() === '') return { valor: 0, unidade: 'kg' };
@@ -86,7 +86,7 @@ function parsePreco(precoStr) {
 }
 
 // ============================================
-// NAV CATEGORIAS
+// NAVEGAÇÃO DE CATEGORIAS
 // ============================================
 function renderizarNavCategorias() {
     const container = document.getElementById('categorias-scroll');
@@ -107,7 +107,7 @@ function scrollParaCategoria(id, btn) {
 }
 
 // ============================================
-// RENDERIZAR PRODUTOS
+// RENDERIZAR PRODUTOS (LAYOUT LISTA)
 // ============================================
 function renderizarProdutos(filtro = '') {
     const container = document.getElementById('produtos-container');
@@ -408,27 +408,39 @@ function carregarCarrinhoSalvo() {
 }
 
 // ============================================
-// NAVEGAÇÃO DE TELAS (NOVO)
+// NAVEGAÇÃO DE TELAS (HOME / CARDÁPIO)
 // ============================================
 function entrarNaLoja() {
-    document.getElementById('tela-home').style.opacity = '0';
+    const telaHome = document.getElementById('tela-home');
+    const appPrincipal = document.getElementById('app-principal');
+    
+    telaHome.style.opacity = '0';
     setTimeout(() => {
-        document.getElementById('tela-home').style.display = 'none';
-        document.getElementById('app-principal').classList.remove('app-escondido');
+        telaHome.style.display = 'none';
+        appPrincipal.classList.remove('app-escondido');
         window.scrollTo(0, 0);
     }, 300);
 }
 
 function voltarParaHome() {
-    document.getElementById('app-principal').classList.add('app-escondido');
-    document.getElementById('tela-home').style.display = 'flex';
+    const telaHome = document.getElementById('tela-home');
+    const appPrincipal = document.getElementById('app-principal');
+    
+    appPrincipal.classList.add('app-escondido');
+    telaHome.style.display = 'flex';
+    
     setTimeout(() => {
-        document.getElementById('tela-home').style.opacity = '1';
+        telaHome.style.opacity = '1';
     }, 50);
 }
 
+function abrirSobreNos() {
+    const modal = new bootstrap.Modal(document.getElementById('modalSobre'));
+    modal.show();
+}
+
 // ============================================
-// FINALIZAR PEDIDO (COM PIX ZERO CUSTO)
+// FINALIZAR PEDIDO (COM PIX E AVISO DE PREÇO)
 // ============================================
 function finalizarPedido() {
     if (carrinho.length === 0) {
@@ -456,6 +468,8 @@ function finalizarPedido() {
     mensagem += `*💰 TOTAL: R$ ${total.toFixed(2).replace('.', ',')}*%0A`;
     mensagem += `━━━━━━━━━━━━━━━━━━%0A%0A`;
     
+    mensagem += `⚠️ *Aviso:* Os preços podem sofrer alterações diárias devido à variação do mercado.%0A%0A`;
+
     mensagem += `*💳 PAGAMENTO VIA PIX*%0A`;
     mensagem += `Chave PIX: *${CHAVE_PIX}*%0A`;
     mensagem += `Favorecido: Casa de Carne H&S%0A%0A`;
@@ -467,7 +481,7 @@ function finalizarPedido() {
 }
 
 // ============================================
-// TOAST
+// TOAST (NOTIFICAÇÃO DE ITEM ADICIONADO)
 // ============================================
 function mostrarToast(texto) {
     const toast = document.createElement('div');
