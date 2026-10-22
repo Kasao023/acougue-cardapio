@@ -22,6 +22,45 @@ let categorias = [];
 let produtos = [];
 let carrinho = [];
 let produtoAtual = null;
+let avisoMostrado = false; // Controle para o aviso aparecer só uma vez
+
+// ============================================
+// NAVEGAÇÃO DE TELAS (HOME / CARDÁPIO)
+// ============================================
+window.entrarNaLoja = function() {
+    // Exibe o aviso (tipo um alerta) apenas na primeira vez que clicar
+    if (!avisoMostrado) {
+        alert("As carnes são vendidas por KG e podem sofrer variações de peso/preço. Ao final do pedido enviaremos uma mensagem com o valor exato.");
+        avisoMostrado = true;
+    }
+
+    const telaHome = document.getElementById('tela-home');
+    const appPrincipal = document.getElementById('app-principal');
+    
+    telaHome.style.opacity = '0';
+    setTimeout(() => {
+        telaHome.style.display = 'none';
+        appPrincipal.classList.remove('app-escondido');
+        window.scrollTo(0, 0);
+    }, 300);
+}
+
+window.voltarParaHome = function() {
+    const telaHome = document.getElementById('tela-home');
+    const appPrincipal = document.getElementById('app-principal');
+    
+    appPrincipal.classList.add('app-escondido');
+    telaHome.style.display = 'flex';
+    
+    setTimeout(() => {
+        telaHome.style.opacity = '1';
+    }, 50);
+}
+
+window.abrirSobreNos = function() {
+    const modal = new bootstrap.Modal(document.getElementById('modalSobre'));
+    modal.show();
+}
 
 // ============================================
 // CARREGAR DADOS DO FIREBASE
@@ -146,7 +185,7 @@ function renderizarProdutos(filtro = '') {
                         <div class="produto-preco">${precoExibir}</div>
                     </div>
                     ${podeAdicionar 
-                        ? `<button class="btn-adicionar" onclick="abrirModalPeso('${prod.id}')">
+                        ? `<button class="btn-adicionar" onclick="window.abrirModalPeso('${prod.id}')">
                             <i class="bi bi-plus-lg"></i>
                            </button>`
                         : `<button class="btn-adicionar" style="background:#ccc;cursor:not-allowed;" disabled>
@@ -173,7 +212,7 @@ function renderizarProdutos(filtro = '') {
     container.innerHTML = html;
 }
 
-function filtrarProdutos() {
+window.filtrarProdutos = function() {
     const termo = document.getElementById('busca').value;
     renderizarProdutos(termo);
 }
@@ -181,7 +220,7 @@ function filtrarProdutos() {
 // ============================================
 // MODAL DE PESO/QUANTIDADE
 // ============================================
-function abrirModalPeso(produtoId) {
+window.abrirModalPeso = function(produtoId) {
     const prod = produtos.find(p => p.id === produtoId);
     if (!prod) return;
 
@@ -214,7 +253,7 @@ function abrirModalPeso(produtoId) {
     new bootstrap.Modal(document.getElementById('modalPeso')).show();
 }
 
-function setQtd(valor) {
+window.setQtd = function(valor) {
     const unidade = document.querySelector('input[name="unidade"]:checked')?.value || 'g';
     const input = document.getElementById('modal-quantidade');
 
@@ -228,7 +267,7 @@ function setQtd(valor) {
     atualizarCalculo();
 }
 
-function atualizarCalculo() {
+window.atualizarCalculo = function() {
     if (!produtoAtual) return;
 
     const input = document.getElementById('modal-quantidade');
@@ -259,7 +298,7 @@ function atualizarCalculo() {
         `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
 }
 
-function confirmarAdicao() {
+window.confirmarAdicao = function() {
     if (!produtoAtual) return;
 
     const input = document.getElementById('modal-quantidade');
@@ -354,7 +393,7 @@ function atualizarCarrinho() {
                     <div class="item-qtd">${item.quantidadeExibir}</div>
                     <div class="item-preco">R$ ${item.subtotal.toFixed(2).replace('.', ',')}</div>
                 </div>
-                <button class="btn-remover-item" onclick="removerItem(${index})">
+                <button class="btn-remover-item" onclick="window.removerItem(${index})">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
@@ -366,19 +405,19 @@ function atualizarCarrinho() {
         `R$ ${total.toFixed(2).replace('.', ',')}`;
 }
 
-function removerItem(index) {
+window.removerItem = function(index) {
     carrinho.splice(index, 1);
     salvarCarrinho();
     atualizarCarrinho();
 }
 
-function abrirCarrinho() {
+window.abrirCarrinho = function() {
     document.getElementById('carrinho-lateral').classList.add('ativo');
     document.getElementById('carrinho-overlay').classList.add('ativo');
     document.body.style.overflow = 'hidden';
 }
 
-function fecharCarrinho() {
+window.fecharCarrinho = function() {
     document.getElementById('carrinho-lateral').classList.remove('ativo');
     document.getElementById('carrinho-overlay').classList.remove('ativo');
     document.body.style.overflow = '';
@@ -408,41 +447,9 @@ function carregarCarrinhoSalvo() {
 }
 
 // ============================================
-// NAVEGAÇÃO DE TELAS (HOME / CARDÁPIO)
+// FINALIZAR PEDIDO (COM PIX E AVISO)
 // ============================================
-function entrarNaLoja() {
-    const telaHome = document.getElementById('tela-home');
-    const appPrincipal = document.getElementById('app-principal');
-    
-    telaHome.style.opacity = '0';
-    setTimeout(() => {
-        telaHome.style.display = 'none';
-        appPrincipal.classList.remove('app-escondido');
-        window.scrollTo(0, 0);
-    }, 300);
-}
-
-function voltarParaHome() {
-    const telaHome = document.getElementById('tela-home');
-    const appPrincipal = document.getElementById('app-principal');
-    
-    appPrincipal.classList.add('app-escondido');
-    telaHome.style.display = 'flex';
-    
-    setTimeout(() => {
-        telaHome.style.opacity = '1';
-    }, 50);
-}
-
-function abrirSobreNos() {
-    const modal = new bootstrap.Modal(document.getElementById('modalSobre'));
-    modal.show();
-}
-
-// ============================================
-// FINALIZAR PEDIDO (COM PIX E AVISO DE PREÇO)
-// ============================================
-function finalizarPedido() {
+window.finalizarPedido = function() {
     if (carrinho.length === 0) {
         alert('Seu carrinho está vazio!');
         return;
@@ -468,7 +475,7 @@ function finalizarPedido() {
     mensagem += `*💰 TOTAL: R$ ${total.toFixed(2).replace('.', ',')}*%0A`;
     mensagem += `━━━━━━━━━━━━━━━━━━%0A%0A`;
     
-    mensagem += `⚠️ *Aviso:* Os preços podem sofrer alterações diárias devido à variação do mercado.%0A%0A`;
+    mensagem += `⚠️ *Aviso:* As carnes são vendidas por KG e podem sofrer variações de peso/preço. Ao final do pedido enviaremos uma mensagem com o valor exato.%0A%0A`;
 
     mensagem += `*💳 PAGAMENTO VIA PIX*%0A`;
     mensagem += `Chave PIX: *${CHAVE_PIX}*%0A`;

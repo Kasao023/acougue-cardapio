@@ -15,12 +15,10 @@
     <div id="tela-home" class="tela-home">
         <div class="overlay-fundo"></div>
         
-        <!-- Topo -->
         <div class="home-topo">
             <button class="btn-topo"><i class="bi bi-person"></i> Clique para entrar</button>
         </div>
 
-        <!-- Logo e Botões -->
         <div class="home-conteudo">
             <div class="home-logo">
                 <img src="casadecarnehs.png" alt="Casa de Carne H&S" class="logo-img">
@@ -34,14 +32,14 @@
             <div class="home-cidade">Cosmópolis - SP</div>
 
             <div class="home-botoes">
-                <!-- Botões chamando a função diretamente via JS -->
-                <button class="btn-home" onclick="entrarNaLoja()">
+                <!-- Correção: Adicionado window. antes da função -->
+                <button class="btn-home" onclick="window.entrarNaLoja()">
                     <i class="bi bi-bicycle"></i> DELIVERY
                 </button>
-                <button class="btn-home" onclick="entrarNaLoja()">
+                <button class="btn-home" onclick="window.entrarNaLoja()">
                     <i class="bi bi-shop"></i> RETIRADA
                 </button>
-                <button class="btn-home btn-sobre" onclick="abrirSobreNos()">
+                <button class="btn-home btn-sobre" onclick="window.abrirSobreNos()">
                     <i class="bi bi-info-circle"></i> SOBRE NÓS
                 </button>
             </div>
@@ -58,7 +56,6 @@
                 </div>
                 <div class="modal-body text-center">
                     <img src="casadecarnehs.png" alt="Logo H&S" style="width: 120px; border-radius: 50%; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                    
                     <p style="font-size: 0.92rem; line-height: 1.6; text-align: justify; margin-bottom: 10px;">
                         A <strong>Casa de Carnes H&S</strong> há mais de <strong>XX anos</strong> (troque pelo número de anos) oferece aos seus clientes cortes diferenciados.
                     </p>
@@ -78,46 +75,35 @@
 
     <!-- ============ APP PRINCIPAL (CARDÁPIO) ============ -->
     <div id="app-principal" class="app-escondido">
-        <!-- HEADER -->
         <header class="header-fixo">
             <div class="container header-inner">
                 <div class="brand">
-                    <button class="btn-voltar-header" onclick="voltarParaHome()"><i class="bi bi-arrow-left"></i></button>
+                    <button class="btn-voltar-header" onclick="window.voltarParaHome()"><i class="bi bi-arrow-left"></i></button>
                     <h1 class="logo">Cardápio</h1>
                 </div>
-                <button class="btn-carrinho-header" onclick="abrirCarrinho()">
+                <button class="btn-carrinho-header" onclick="window.abrirCarrinho()">
                     <i class="bi bi-bag"></i>
                     <span class="badge-carrinho" id="badge-carrinho">0</span>
                 </button>
             </div>
         </header>
 
-        <!-- BUSCA -->
         <section class="busca-area">
             <div class="container">
                 <div class="busca-wrapper">
                     <i class="bi bi-search"></i>
-                    <input type="text" id="busca" placeholder="Buscar corte, ex: picanha..." oninput="filtrarProdutos()">
+                    <input type="text" id="busca" placeholder="Buscar corte, ex: picanha..." oninput="window.filtrarProdutos()">
                 </div>
             </div>
         </section>
 
-        <!-- CATEGORIAS -->
         <nav class="categorias-nav">
             <div class="container">
                 <div class="categorias-scroll" id="categorias-scroll"></div>
             </div>
         </nav>
 
-        <!-- PRODUTOS -->
         <main class="container my-2 main-content">
-            
-            <!-- AVISO DE VARIAÇÃO DE PREÇO -->
-            <div class="aviso-preco">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <p><strong>Aviso Importante:</strong> Os valores dos produtos podem sofrer alterações diárias devido à variação do mercado. O valor final será confirmado no momento da entrega ou retirada.</p>
-            </div>
-
             <div id="loading" class="text-center py-5">
                 <div class="spinner-border text-danger" role="status"></div>
                 <p class="mt-3 text-muted">Carregando produtos...</p>
@@ -128,11 +114,11 @@
 
     <!-- ============ BARRA INFERIOR (FIXA) ============ -->
     <nav class="barra-navegacao">
-        <button class="nav-item" onclick="voltarParaHome()">
+        <button class="nav-item" onclick="window.voltarParaHome()">
             <i class="bi bi-house"></i>
             <span>Início</span>
         </button>
-        <button class="nav-item" onclick="abrirCarrinho()">
+        <button class="nav-item" onclick="window.abrirCarrinho()">
             <i class="bi bi-cart"></i>
             <span>Carrinho</span>
         </button>
@@ -166,21 +152,21 @@
                     <div id="modal-unidade-wrapper" class="mt-3">
                         <label class="form-label fw-bold small">Como deseja informar?</label>
                         <div class="segmented">
-                            <input type="radio" class="btn-check" name="unidade" id="unidade-g" value="g" checked onchange="atualizarCalculo()">
+                            <input type="radio" class="btn-check" name="unidade" id="unidade-g" value="g" checked onchange="window.atualizarCalculo()">
                             <label class="segmented-item" for="unidade-g">Gramas (g)</label>
-                            <input type="radio" class="btn-check" name="unidade" id="unidade-kg" value="kg" onchange="atualizarCalculo()">
+                            <input type="radio" class="btn-check" name="unidade" id="unidade-kg" value="kg" onchange="window.atualizarCalculo()">
                             <label class="segmented-item" for="unidade-kg">Quilos (kg)</label>
                         </div>
                     </div>
 
                     <div class="mt-3">
                         <label class="form-label fw-bold small" id="modal-qtd-label">Quantidade (g)</label>
-                        <input type="number" class="form-control form-control-lg" id="modal-quantidade" placeholder="Ex: 500" min="0" step="1" oninput="atualizarCalculo()">
+                        <input type="number" class="form-control form-control-lg" id="modal-quantidade" placeholder="Ex: 500" min="0" step="1" oninput="window.atualizarCalculo()">
                         <div class="qtd-rapida mt-2" id="qtd-rapida-wrapper">
-                            <button type="button" class="btn-qtd-rapida" onclick="setQtd(250)">250g</button>
-                            <button type="button" class="btn-qtd-rapida" onclick="setQtd(500)">500g</button>
-                            <button type="button" class="btn-qtd-rapida" onclick="setQtd(1000)">1kg</button>
-                            <button type="button" class="btn-qtd-rapida" onclick="setQtd(2000)">2kg</button>
+                            <button type="button" class="btn-qtd-rapida" onclick="window.setQtd(250)">250g</button>
+                            <button type="button" class="btn-qtd-rapida" onclick="window.setQtd(500)">500g</button>
+                            <button type="button" class="btn-qtd-rapida" onclick="window.setQtd(1000)">1kg</button>
+                            <button type="button" class="btn-qtd-rapida" onclick="window.setQtd(2000)">2kg</button>
                         </div>
                     </div>
 
@@ -191,19 +177,19 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light flex-fill" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger fw-bold flex-fill text-white" onclick="confirmarAdicao()">Adicionar</button>
+                    <button type="button" class="btn btn-danger fw-bold flex-fill text-white" onclick="window.confirmarAdicao()">Adicionar</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ============ CARRINHO LATERAL ============ -->
-    <div class="carrinho-overlay" id="carrinho-overlay" onclick="fecharCarrinho()"></div>
+    <div class="carrinho-overlay" id="carrinho-overlay" onclick="window.fecharCarrinho()"></div>
 
     <aside class="carrinho-lateral" id="carrinho-lateral">
         <div class="carrinho-header">
             <h3><i class="bi bi-bag"></i> Seu Pedido</h3>
-            <button class="btn-fechar-carrinho" onclick="fecharCarrinho()"><i class="bi bi-x-lg"></i></button>
+            <button class="btn-fechar-carrinho" onclick="window.fecharCarrinho()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="carrinho-body" id="carrinho-body"></div>
         <div class="carrinho-footer" id="carrinho-footer">
@@ -213,7 +199,7 @@
                     <strong id="carrinho-total">R$ 0,00</strong>
                 </div>
             </div>
-            <button class="btn-finalizar" onclick="finalizarPedido()">
+            <button class="btn-finalizar" onclick="window.finalizarPedido()">
                 <i class="bi bi-whatsapp"></i> Finalizar Pedido
             </button>
         </div>
