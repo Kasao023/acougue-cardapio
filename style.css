@@ -24,25 +24,126 @@ body {
 .tela-home {
     position: fixed; inset: 0;
     background: linear-gradient(135deg, #2a2a2a 0%, #111111 100%);
-    z-index: 2000; display: flex; flex-direction: column; transition: opacity 0.3s;
+    z-index: 2000; 
+    display: flex; 
+    flex-direction: column; 
+    transition: opacity 0.3s;
+    overflow-y: auto; /* Permite rolar se a tela for muito pequena */
 }
+
 .overlay-fundo {
     position: absolute; inset: 0;
     background: radial-gradient(circle, rgba(217,31,38,0.15) 0%, rgba(0,0,0,0.8) 100%);
 }
-.home-topo { position: relative; z-index: 2; padding: 20px; }
-.btn-topo { background: transparent; border: none; color: #fff; font-size: 1rem; display: flex; align-items: center; gap: 8px; font-weight: 500; }
-.home-conteudo { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-.home-logo { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
-.logo-img { width: 220px; height: auto; object-fit: contain; border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-.home-logo p { color: #fff; font-weight: 500; font-size: 0.95rem; margin-top: 15px; }
-.home-status { margin: 10px 0 15px; }
-.status-fechado { background: rgba(255,255,255,0.1); color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,0.2); }
-.home-cidade { color: #fff; font-weight: 600; margin-bottom: 25px; }
-.home-botoes { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 12px; }
-.btn-home { background: var(--vermelho); color: #fff; border: none; border-radius: 50px; padding: 15px; font-size: 1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(217, 31, 38, 0.4); transition: transform 0.2s; }
-.btn-home:active { transform: scale(0.96); }
-.btn-sobre { background: #444; box-shadow: none; }
+
+.home-topo { 
+    position: relative; 
+    z-index: 2; 
+    padding: 15px 20px; 
+}
+
+.btn-topo { 
+    background: transparent; 
+    border: none; 
+    color: #fff; 
+    font-size: 0.9rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    font-weight: 500; 
+}
+
+.home-conteudo { 
+    position: relative; 
+    z-index: 2; 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 10px 20px 30px 20px; 
+    text-align: center; 
+}
+
+.home-logo { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    margin-bottom: 10px; 
+}
+
+/* Logo menor para caber na tela */
+.logo-img { 
+    width: 140px; 
+    height: auto; 
+    object-fit: contain; 
+    border-radius: 50%; 
+    box-shadow: 0 0 20px rgba(0,0,0,0.5); 
+}
+
+.home-logo p { 
+    color: #fff; 
+    font-weight: 500; 
+    font-size: 0.85rem; 
+    margin-top: 8px; 
+}
+
+.home-status { 
+    margin: 5px 0 10px; 
+}
+
+.status-fechado { 
+    background: rgba(255,255,255,0.1); 
+    color: #fff; 
+    padding: 5px 14px; 
+    border-radius: 20px; 
+    font-size: 0.75rem; 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 5px; 
+    border: 1px solid rgba(255,255,255,0.2); 
+}
+
+.home-cidade { 
+    color: #fff; 
+    font-weight: 600; 
+    font-size: 0.9rem;
+    margin-bottom: 15px; 
+}
+
+.home-botoes { 
+    width: 100%; 
+    max-width: 300px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+}
+
+.btn-home { 
+    background: var(--vermelho); 
+    color: #fff; 
+    border: none; 
+    border-radius: 50px; 
+    padding: 12px; 
+    font-size: 0.95rem; 
+    font-weight: 700; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px; 
+    cursor: pointer; 
+    box-shadow: 0 4px 15px rgba(217, 31, 38, 0.4); 
+    transition: transform 0.2s; 
+}
+
+.btn-home:active { 
+    transform: scale(0.96); 
+}
+
+.btn-sobre { 
+    background: #444; 
+    box-shadow: none; 
+}
 
 /* ============ APP PRINCIPAL ============ */
 .app-escondido { display: none; }
