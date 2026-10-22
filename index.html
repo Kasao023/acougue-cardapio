@@ -14,25 +14,19 @@
     <!-- ============ TELA INICIAL (CAPA) ============ -->
     <div id="tela-home" class="tela-home">
         <div class="overlay-fundo"></div>
-        
         <div class="home-topo">
             <button class="btn-topo"><i class="bi bi-person"></i> Clique para entrar</button>
         </div>
-
         <div class="home-conteudo">
             <div class="home-logo">
                 <img src="casadecarnehs.png" alt="Casa de Carne H&S" class="logo-img">
                 <p class="mt-3">Qualidade & Preço Bom!</p>
             </div>
-
             <div class="home-status">
                 <span class="status-fechado">Aberto para pedidos <i class="bi bi-chevron-right"></i></span>
             </div>
-
             <div class="home-cidade">Cosmópolis - SP</div>
-
             <div class="home-botoes">
-                <!-- Correção: Adicionado window. antes da função -->
                 <button class="btn-home" onclick="window.entrarNaLoja()">
                     <i class="bi bi-bicycle"></i> DELIVERY
                 </button>
@@ -115,20 +109,16 @@
     <!-- ============ BARRA INFERIOR (FIXA) ============ -->
     <nav class="barra-navegacao">
         <button class="nav-item" onclick="window.voltarParaHome()">
-            <i class="bi bi-house"></i>
-            <span>Início</span>
+            <i class="bi bi-house"></i><span>Início</span>
         </button>
         <button class="nav-item" onclick="window.abrirCarrinho()">
-            <i class="bi bi-cart"></i>
-            <span>Carrinho</span>
+            <i class="bi bi-cart"></i><span>Carrinho</span>
         </button>
         <button class="nav-item" onclick="alert('Área de pedidos em breve!')">
-            <i class="bi bi-receipt"></i>
-            <span>Pedidos</span>
+            <i class="bi bi-receipt"></i><span>Pedidos</span>
         </button>
         <button class="nav-item" onclick="alert('Área de perfil em breve!')">
-            <i class="bi bi-person"></i>
-            <span>Perfil</span>
+            <i class="bi bi-person"></i><span>Perfil</span>
         </button>
     </nav>
 
@@ -150,7 +140,7 @@
                     </div>
 
                     <div id="modal-unidade-wrapper" class="mt-3">
-                        <label class="form-label fw-bold small">Como deseja informar?</label>
+                        <label class="form-label fw-bold small">Como deseja informar o peso?</label>
                         <div class="segmented">
                             <input type="radio" class="btn-check" name="unidade" id="unidade-g" value="g" checked onchange="window.atualizarCalculo()">
                             <label class="segmented-item" for="unidade-g">Gramas (g)</label>
@@ -170,6 +160,28 @@
                         </div>
                     </div>
 
+                    <div id="opcoes-corte-wrapper" class="mt-3" style="display: none;">
+                        <label class="form-label fw-bold small">Como deseja o corte? (Opcional)</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <input type="radio" class="btn-check" name="tipoCorte" id="corte-inteiro" value="Inteiro" checked>
+                            <label class="btn-corte" for="corte-inteiro">Inteiro</label>
+
+                            <input type="radio" class="btn-check" name="tipoCorte" id="corte-bife" value="Em Bifes">
+                            <label class="btn-corte" for="corte-bife">Em Bifes</label>
+
+                            <input type="radio" class="btn-check" name="tipoCorte" id="corte-cubo" value="Em Cubos">
+                            <label class="btn-corte" for="corte-cubo">Em Cubos</label>
+
+                            <input type="radio" class="btn-check" name="tipoCorte" id="corte-moido" value="Moído">
+                            <label class="btn-corte" for="corte-moido">Moído</label>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label fw-bold small">Observação (Opcional)</label>
+                        <textarea class="form-control" id="modal-observacao" rows="2" placeholder="Ex: Moer 2x, tirar a gordura, cortar fino..."></textarea>
+                    </div>
+
                     <div class="modal-subtotal mt-3">
                         <span>Subtotal</span>
                         <strong id="modal-subtotal">R$ 0,00</strong>
@@ -185,7 +197,6 @@
 
     <!-- ============ CARRINHO LATERAL ============ -->
     <div class="carrinho-overlay" id="carrinho-overlay" onclick="window.fecharCarrinho()"></div>
-
     <aside class="carrinho-lateral" id="carrinho-lateral">
         <div class="carrinho-header">
             <h3><i class="bi bi-bag"></i> Seu Pedido</h3>
