@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin | Casa de Carne H&S</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --vermelho: #d91f26; --escuro: #222222; --cinza: #f4f5f7; }
+        body { font-family: 'Poppins', sans-serif; background: var(--cinza); padding-bottom: 30px; }
+        
+        .header-admin { background: var(--escuro); color: #fff; padding: 15px; text-align: center; border-bottom: 3px solid var(--vermelho); margin-bottom: 20px; position: sticky; top: 0; z-index: 1000; }
+        .header-admin h2 { font-size: 1.2rem; margin: 0; font-weight: 700; }
+        
+        #tela-login { position: fixed; inset: 0; background: var(--escuro); display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; }
+        .login-box { background: #fff; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
+        .login-box img { width: 100px; margin-bottom: 15px; border-radius: 50%; }
+        
+        .ferramentas-admin { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 60px; z-index: 999; }
+        .busca-admin { position: relative; margin-bottom: 10px; }
+        .busca-admin i { position: absolute; left: 12px; top: 12px; color: #999; }
+        .busca-admin input { width: 100%; padding: 10px 10px 10px 35px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9; font-size: 0.9rem; outline: none; }
+        
+        .filtros-categorias { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; }
+        .filtro-chip { background: #f0f0f0; border: 1px solid #ddd; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer; color: #555; transition: 0.2s; }
+        .filtro-chip.ativo { background: var(--vermelho); color: #fff; border-color: var(--vermelho); }
+
+        .admin-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid var(--vermelho); display: flex; justify-content: space-between; align-items: center; }
+        .admin-card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+        
+        .btn-acao { border: none; border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 0.85rem; }
+        .btn-editar { background: #ffeeba; color: #856404; }
+        .btn-excluir { background: #f8d7da; color: #721c24; }
+        
+        .img-preview { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; border: 2px dashed #ddd; background: #f9f9f9; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.8rem; }
+        
+        .d-none { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="tela-login">
+        <div class="login-box">
+            <img src="casadecarnehs.png" alt="Logo">
+            <h4 class="mb-3">Área Restrita</h4>
+            <p class="text-muted small">Digite a senha para gerenciar o cardápio.</p>
+            <input type="password" id="senha-admin" class="form-control form-control-lg mb-3 text-center" placeholder="Senha">
+            <button class="btn btn-danger w-100 fw-bold" onclick="verificarSenha()">Entrar no Painel</button>
+            <p id="erro-senha" class="text-danger small mt-2 d-none">Senha incorreta!</p>
+        </div>
+    </div>
+
+    <div id="painel-admin" class="d-none">
+        <div class="header-admin">
+            <h2><i class="bi bi-gear-fill"></i> Painel de Controle H&S</h2>
+        </div>
+
+        <div class="container">
+            <div class="ferramentas-admin">
+                <div class="busca-admin">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="busca-admin" placeholder="Buscar produto por nome..." oninput="filtrarAdmin()">
+                </div>
+                <div class="filtros-categorias" id="filtros-categorias"></div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold text-dark" id="titulo-lista">Todos os Produtos</h5>
+                <button class="btn btn-danger fw-bold btn-sm" onclick="abrirNovoProduto()">
+                    <i class="bi bi-plus-lg"></i> Novo
+                </button>
+            </div>
+
+            <div id="lista-admin"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius: 15px; border: none;">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="titulo-modal">Editar Produto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit-id">
+                    <input type="hidden" id="edit-imagem-base64"> 
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Nome do Produto</label>
+                        <input type="text" id="edit-nome" class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Preço (Ex: 41,99 kg ou 3,99 un)</label>
+                        <input type="text" id="edit-preco" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Categoria</label>
+                        <select id="edit-categoria" class="form-select">
+                            <!-- Preenchido via JS -->
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Foto do Produto</label>
+                        <input type="file" id="edit-file" class="form-control mb-2" accept="image/*" onchange="previewImagem(event)">
+                        <div id="preview-container">
+                            <img id="img-preview" class="img-preview" src="" alt="Prévia da imagem" style="display: none;">
+                            <div id="no-img-text" class="img-preview">Nenhuma imagem selecionada</div>
+                        </div>
+                        <small class="text-muted" style="font-size: 0.7rem;">Recomendado: imagens quadradas.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger fw-bold" onclick="salvarProduto()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <script>
+        const SENHA_ADMIN = "1234"; // TROQUE AQUI
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAgUXojOAljeRudGNRF9rcvAJ4CNJSVF-s",
+          authDomain: "fir-aluguel2.firebaseapp.com",
+          databaseURL: "https://fir-aluguel2.firebaseio.com",
+          projectId: "fir-aluguel2",
+          storageBucket: "fir-aluguel2.appspot.com",
+          messagingSenderId: "1082687810478",
+          appId: "1:1082687810478:web:3af608b7264b5f95eab63f"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let categoriasGlobais = [];
+        let produtosGlobais = [];
+        let filtroAtual = 'todos';
+
+        function verificarSenha() {
+            const senha = document.getElementById('senha-admin').value;
+            if (senha === SENHA_ADMIN) {
+                document.getElementById('tela-login').classList.add('d-none');
+                document.getElementById('painel-admin').classList.remove('d-none');
+                carregarDadosAdmin();
+            } else {
+                document.getElementById('erro-senha').classList.remove('d-none');
+            }
+        }
+
+        function carregarDadosAdmin() {
+            // Lê a tabela "Category" conforme o seu JSON
+            db.ref('Category').once('value').then(snap => {
+                categoriasGlobais = [];
+                
+                snap.forEach(c => {
+                    const val = c.val();
+                    if (val && val.name) {
+                        categoriasGlobais.push({ id: c.key, nome: val.name });
+                    }
+                });
+
+                categoriasGlobais.sort((a, b) => a.nome.localeCompare(b.nome));
+
+                let selectHtml = '';
+                categoriasGlobais.forEach(c => {
+                    selectHtml += `<option value="${c.id}">${c.nome}</option>`;
+                });
+                document.getElementById('edit-categoria').innerHTML = selectHtml;
+
+                renderizarFiltros();
+                return db.ref('Foods').once('value');
+            }).then(snap => {
+                produtosGlobais = [];
+                snap.forEach(p => {
+                    const val = p.val();
+                    produtosGlobais.push({
+                        id: p.key,
+                        nome: val.name,
+                        preco: val.price,
+                        imagem: val.image,
+                        menuId: val.menuId
+                    });
+                });
+                filtrarAdmin(); 
+            }).catch(err => {
+                console.error("Erro ao carregar dados:", err);
+                alert("Erro ao carregar os dados.");
+            });
+        }
+
+        function renderizarFiltros() {
+            const container = document.getElementById('filtros-categorias');
+            let html = `<button class="filtro-chip ${filtroAtual === 'todos' ? 'ativo' : ''}" onclick="mudarFiltro('todos', this)">Todos</button>`;
+            
+            categoriasGlobais.forEach(c => {
+                html += `<button class="filtro-chip ${filtroAtual === c.id ? 'ativo' : ''}" onclick="mudarFiltro('${c.id}', this)">${c.nome}</button>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function mudarFiltro(id, btn) {
+            filtroAtual = id;
+            document.querySelectorAll('.filtro-chip').forEach(b => b.classList.remove('ativo'));
+            if (btn) btn.classList.add('ativo');
+            
+            if(id === 'todos') {
+                document.getElementById('titulo-lista').innerText = "Todos os Produtos";
+            } else {
+                const cat = categoriasGlobais.find(c => c.id === id);
+                document.getElementById('titulo-lista').innerText = cat ? cat.nome : "Produtos";
+            }
+
+            filtrarAdmin();
+        }
+
+        function filtrarAdmin() {
+            const termo = document.getElementById('busca-admin').value.toLowerCase().trim();
+            
+            const filtrados = produtosGlobais.filter(p => {
+                const matchBusca = p.nome.toLowerCase().includes(termo);
+                const matchCategoria = filtroAtual === 'todos' || p.menuId === filtroAtual;
+                return matchBusca && matchCategoria;
+            });
+
+            renderizarListaAdmin(filtrados);
+        }
+
+        function renderizarListaAdmin(lista) {
+            const container = document.getElementById('lista-admin');
+            
+            if (lista.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted p-4"><i class="bi bi-search fs-3 d-block mb-2"></i> Nenhum produto encontrado.</div>`;
+                return;
+            }
+
+            let html = '';
+            lista.forEach(p => {
+                html += `
+                    <div class="admin-card">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="${p.imagem}" onerror="this.src='https://placehold.co/60x60/eee/999?text=?'">
+                            <div>
+                                <h6 class="mb-0 fw-bold text-dark">${p.nome}</h6>
+                                <span class="text-danger fw-bold">R$ ${p.preco}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn-acao btn-editar" onclick="abrirEditar('${p.id}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn-acao btn-excluir" onclick="excluirProduto('${p.id}')"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function previewImagem(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600; 
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const base64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    document.getElementById('edit-imagem-base64').value = base64;
+                    document.getElementById('img-preview').src = base64;
+                    document.getElementById('img-preview').style.display = 'block';
+                    document.getElementById('no-img-text').style.display = 'none';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function abrirNovoProduto() {
+            document.getElementById('titulo-modal').innerText = "Novo Produto";
+            document.getElementById('edit-id').value = '';
+            document.getElementById('edit-nome').value = '';
+            document.getElementById('edit-preco').value = '';
+            document.getElementById('edit-imagem-base64').value = '';
+            document.getElementById('edit-file').value = '';
+            
+            document.getElementById('img-preview').src = '';
+            document.getElementById('img-preview').style.display = 'none';
+            document.getElementById('no-img-text').style.display = 'flex';
+
+            new bootstrap.Modal(document.getElementById('modalEditar')).show();
+        }
+
+        function abrirEditar(id) {
+            const p = produtosGlobais.find(prod => prod.id === id);
+            if (!p) return;
+
+            document.getElementById('titulo-modal').innerText = "Editar Produto";
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('edit-nome').value = p.nome;
+            document.getElementById('edit-preco').value = p.preco;
+            document.getElementById('edit-categoria').value = p.menuId;
+            
+            document.getElementById('edit-imagem-base64').value = p.imagem;
+            if (p.imagem) {
+                document.getElementById('img-preview').src = p.imagem;
+                document.getElementById('img-preview').style.display = 'block';
+                document.getElementById('no-img-text').style.display = 'none';
+            } else {
+                document.getElementById('img-preview').style.display = 'none';
+                document.getElementById('no-img-text').style.display = 'flex';
+            }
+
+            document.getElementById('edit-file').value = '';
+            new bootstrap.Modal(document.getElementById('modalEditar')).show();
+        }
+
+        function salvarProduto() {
+            const id = document.getElementById('edit-id').value;
+            const nome = document.getElementById('edit-nome').value;
+            const preco = document.getElementById('edit-preco').value;
+            const imagem = document.getElementById('edit-imagem-base64').value;
+            const categoria = document.getElementById('edit-categoria').value;
+
+            if (!nome || !preco) {
+                alert("Preencha o nome e o preço!");
+                return;
+            }
+
+            const dados = {
+                name: nome,
+                price: preco,
+                image: imagem,
+                menuId: categoria,
+                description: "",
+                discount: "",
+                validadeFim: "",
+                validadeInicio: ""
+            };
+
+            if (id) {
+                db.ref('Foods/' + id).update(dados).then(() => {
+                    alert("Produto atualizado com sucesso!");
+                    bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
+                    carregarDadosAdmin();
+                });
+            } else {
+                db.ref('Foods').push(dados).then(() => {
+                    alert("Produto criado com sucesso!");
+                    bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
+                    carregarDadosAdmin();
+                });
+            }
+        }
+
+        function excluirProduto(id) {
+            if (confirm("Tem certeza que deseja excluir este produto?")) {
+                db.ref('Foods/' + id).remove().then(() => {
+                    carregarDadosAdmin();
+                });
+            }
+        }
+    </script>
+</body>
+</html>
