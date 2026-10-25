@@ -84,7 +84,8 @@ function carregarDados() {
                         precoNumerico: parsed.valor,
                         unidade: parsed.unidade,
                         imagem: val.image || '',
-                        menuId: val.menuId
+                        menuId: val.menuId,
+                        disponivel: val.disponivel !== false
                     });
                 }
             });
@@ -142,7 +143,8 @@ function renderizarProdutos(filtro = '') {
         const produtosCat = produtos.filter(p => {
             const matchCat = p.menuId === cat.id;
             const matchBusca = termo === '' || p.nome.toLowerCase().includes(termo);
-            return matchCat && matchBusca;
+            const estaDisponivel = p.disponivel !== false; // <-- FILTRO DE ESGOTADO
+            return matchCat && matchBusca && estaDisponivel;
         });
         if (produtosCat.length === 0) return;
         total += produtosCat.length;

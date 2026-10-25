@@ -27,16 +27,21 @@
         .filtro-chip { background: #f0f0f0; border: 1px solid #ddd; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer; color: #555; transition: 0.2s; }
         .filtro-chip.ativo { background: var(--vermelho); color: #fff; border-color: var(--vermelho); }
 
-        .admin-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid var(--vermelho); display: flex; justify-content: space-between; align-items: center; }
+        .admin-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid var(--vermelho); display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .admin-card.esgotado { opacity: 0.7; border-left-color: #999; }
         .admin-card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+        .admin-card img.grayscale { filter: grayscale(1); }
         
         .btn-acao { border: none; border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 0.85rem; }
         .btn-editar { background: #ffeeba; color: #856404; }
         .btn-excluir { background: #f8d7da; color: #721c24; }
+        .btn-disponivel { background: #d4edda; color: #155724; }
+        .btn-esgotado { background: #fff3cd; color: #856404; }
         
         .img-preview { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; border: 2px dashed #ddd; background: #f9f9f9; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.8rem; }
         
         .d-none { display: none !important; }
+        .badge-esgotado { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -64,6 +69,12 @@
                     <input type="text" id="busca-admin" placeholder="Buscar produto por nome..." oninput="filtrarAdmin()">
                 </div>
                 <div class="filtros-categorias" id="filtros-categorias"></div>
+                <div class="form-check form-switch mt-2 mb-0">
+                    <input class="form-check-input" type="checkbox" id="filtro-esgotados" onchange="filtrarAdmin()">
+                    <label class="form-check-label small fw-bold" for="filtro-esgotados">
+                        Mostrar apenas produtos esgotados
+                    </label>
+                </div>
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -158,7 +169,6 @@
         }
 
         function carregarDadosAdmin() {
-            // Lê a tabela "Category" conforme o seu JSON
             db.ref('Category').once('value').then(snap => {
                 categoriasGlobais = [];
                 
@@ -188,7 +198,8 @@
                         nome: val.name,
                         preco: val.price,
                         imagem: val.image,
-                        menuId: val.menuId
+                        menuId: val.menuId,
+                        disponivel: val.disponivel !== false
                     });
                 });
                 filtrarAdmin(); 
@@ -226,11 +237,14 @@
 
         function filtrarAdmin() {
             const termo = document.getElementById('busca-admin').value.toLowerCase().trim();
+            const soEsgotados = document.getElementById('filtro-esgotados').checked;
             
             const filtrados = produtosGlobais.filter(p => {
                 const matchBusca = p.nome.toLowerCase().includes(termo);
                 const matchCategoria = filtroAtual === 'todos' || p.menuId === filtroAtual;
-                return matchBusca && matchCategoria;
+                const disponivel = p.disponivel !== false;
+                const matchEsgotado = !soEsgotados || !disponivel;
+                return matchBusca && matchCategoria && matchEsgotado;
             });
 
             renderizarListaAdmin(filtrados);
@@ -246,16 +260,27 @@
 
             let html = '';
             lista.forEach(p => {
+                const disponivel = p.disponivel !== false;
+                
+                const badgeEsgotado = !disponivel 
+                    ? `<span class="badge bg-secondary badge-esgotado">ESGOTADO</span>` 
+                    : '';
+                
+                const btnToggle = disponivel
+                    ? `<button class="btn-acao btn-disponivel" onclick="toggleDisponibilidade('${p.id}', true)" title="Marcar como esgotado"><i class="bi bi-eye-fill"></i></button>`
+                    : `<button class="btn-acao btn-esgotado" onclick="toggleDisponibilidade('${p.id}', false)" title="Reativar produto"><i class="bi bi-eye-slash-fill"></i></button>`;
+
                 html += `
-                    <div class="admin-card">
+                    <div class="admin-card ${!disponivel ? 'esgotado' : ''}">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="${p.imagem}" onerror="this.src='https://placehold.co/60x60/eee/999?text=?'">
+                            <img src="${p.imagem}" class="${!disponivel ? 'grayscale' : ''}" onerror="this.src='https://placehold.co/60x60/eee/999?text=?'">
                             <div>
-                                <h6 class="mb-0 fw-bold text-dark">${p.nome}</h6>
+                                <h6 class="mb-0 fw-bold text-dark">${p.nome}${badgeEsgotado}</h6>
                                 <span class="text-danger fw-bold">R$ ${p.preco}</span>
                             </div>
                         </div>
                         <div class="d-flex gap-2">
+                            ${btnToggle}
                             <button class="btn-acao btn-editar" onclick="abrirEditar('${p.id}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn-acao btn-excluir" onclick="excluirProduto('${p.id}')"><i class="bi bi-trash"></i></button>
                         </div>
@@ -264,6 +289,26 @@
             });
 
             container.innerHTML = html;
+        }
+
+        function toggleDisponibilidade(id, estaDisponivel) {
+            const novoStatus = !estaDisponivel;
+            const acao = novoStatus 
+                ? 'reativar este produto (voltar a aparecer no site)' 
+                : 'marcar como ESGOTADO (esconder do site)';
+            
+            if (!confirm(`Deseja ${acao}?`)) return;
+            
+            db.ref('Foods/' + id).update({ disponivel: novoStatus })
+                .then(() => {
+                    const prod = produtosGlobais.find(p => p.id === id);
+                    if (prod) prod.disponivel = novoStatus;
+                    filtrarAdmin();
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Erro ao atualizar. Tente novamente.');
+                });
         }
 
         function previewImagem(event) {
@@ -364,12 +409,17 @@
             };
 
             if (id) {
+                const prodAtual = produtosGlobais.find(p => p.id === id);
+                dados.disponivel = prodAtual ? (prodAtual.disponivel !== false) : true;
+                
                 db.ref('Foods/' + id).update(dados).then(() => {
                     alert("Produto atualizado com sucesso!");
                     bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
                     carregarDadosAdmin();
                 });
             } else {
+                dados.disponivel = true;
+                
                 db.ref('Foods').push(dados).then(() => {
                     alert("Produto criado com sucesso!");
                     bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
