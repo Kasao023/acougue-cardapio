@@ -42,24 +42,25 @@ body {
 .logo-img { width: 120px; height: auto; object-fit: contain; border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
 .home-botoes { display: flex; flex-direction: column; gap: 10px; }
 
-.btn-delivery, .btn-retirada {
-    background: #fff;
-    color: var(--texto);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    border-radius: 12px;
-    padding: 15px;
-    border: none;
-    width: 100%;
-    transition: transform 0.2s;
+/* Botões redondinhos restaurados */
+.btn-home { 
+    background: var(--vermelho); 
+    color: #fff; 
+    border: none; 
+    border-radius: 50px; 
+    padding: 12px; 
+    font-size: 0.95rem; 
+    font-weight: 700; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px; 
+    cursor: pointer; 
+    box-shadow: 0 4px 15px rgba(217, 31, 38, 0.4); 
+    transition: transform 0.2s; 
 }
-.btn-delivery:active, .btn-retirada:active { transform: scale(0.98); }
-.btn-delivery i { color: var(--vermelho); }
-.btn-retirada i { color: #007bff; }
-.btn-delivery strong, .btn-retirada strong { font-size: 1rem; color: var(--escuro); }
-.btn-sobre { background: #444; color: #fff; border: none; border-radius: 50px; padding: 12px; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: transform 0.2s; }
+.btn-home:active { transform: scale(0.96); }
+.btn-sobre { background: #444; box-shadow: none; }
 
 /* ============ TOPO DA LOJA ============ */
 .topo-loja {

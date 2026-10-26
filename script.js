@@ -15,8 +15,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const WHATSAPP = "5515998183052"; // <-- COLOQUE O NÚMERO CORRETO AQUI
-const CHAVE_PIX = "00.000.000/0000-00"; // <-- COLOQUE A CHAVE PIX REAL AQUI
+const WHATSAPP = "5515998183052"; 
+const CHAVE_PIX = "00.000.000/0000-00"; 
 
 let categorias = [];
 let produtos = [];
@@ -27,23 +27,26 @@ let produtoAtual = null;
 // NAVEGAÇÃO DE TELAS
 // ============================================
 window.entrarNaLoja = function() {
-    // O aviso de KG foi removido daqui, agora entra direto.
     const telaHome = document.getElementById('tela-home');
     const appPrincipal = document.getElementById('app-principal');
-    telaHome.style.opacity = '0';
-    setTimeout(() => {
-        telaHome.style.display = 'none';
-        appPrincipal.classList.remove('app-escondido');
-        window.scrollTo(0, 0);
-    }, 300);
+    if (telaHome && appPrincipal) {
+        telaHome.style.opacity = '0';
+        setTimeout(() => {
+            telaHome.style.display = 'none';
+            appPrincipal.classList.remove('app-escondido');
+            window.scrollTo(0, 0);
+        }, 300);
+    }
 }
 
 window.voltarParaHome = function() {
     const telaHome = document.getElementById('tela-home');
     const appPrincipal = document.getElementById('app-principal');
-    appPrincipal.classList.add('app-escondido');
-    telaHome.style.display = 'flex';
-    setTimeout(() => { telaHome.style.opacity = '1'; }, 50);
+    if (telaHome && appPrincipal) {
+        appPrincipal.classList.add('app-escondido');
+        telaHome.style.display = 'flex';
+        setTimeout(() => { telaHome.style.opacity = '1'; }, 50);
+    }
 }
 
 // ============================================
@@ -295,15 +298,19 @@ window.confirmarAdicao = function() {
 // ============================================
 function atualizarCarrinho() {
     const badge = document.getElementById('badge-carrinho');
-    if (carrinho.length > 0) {
-        badge.textContent = carrinho.length;
-        badge.classList.add('visivel');
-    } else {
-        badge.classList.remove('visivel');
+    if (badge) {
+        if (carrinho.length > 0) {
+            badge.textContent = carrinho.length;
+            badge.classList.add('visivel');
+        } else {
+            badge.classList.remove('visivel');
+        }
     }
 
     const body = document.getElementById('carrinho-body');
     const footer = document.getElementById('carrinho-footer');
+
+    if (!body || !footer) return;
 
     if (carrinho.length === 0) {
         body.innerHTML = `<div class="carrinho-vazio"><i class="bi bi-cart-x"></i><h5>Seu carrinho está vazio</h5><p class="small">Adicione produtos para começar</p></div>`;
@@ -435,62 +442,57 @@ function mostrarToast(texto) {
 }
 
 // ============================================
-// LÓGICA DO CARROSSEL DO BANNER
+// INICIALIZAÇÃO (DOM PRONTO)
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     carregarDados();
 
+    // Lógica do Carrossel
     const carousel = document.getElementById('bannerCarousel');
     const dots = document.querySelectorAll('.banner-dots .dot');
     const items = document.querySelectorAll('.banner-item');
     
-    if (!carousel || items.length === 0) return;
+    if (carousel && items.length > 0) {
+        let currentIndex = 0;
+        let autoScrollInterval;
 
-    let currentIndex = 0;
-    let autoScrollInterval;
-
-    function scrollToIndex(index) {
-        const itemWidth = items[0].offsetWidth + 15; // Largura do item + gap
-        carousel.scrollTo({
-            left: index * itemWidth,
-            behavior: 'smooth'
-        });
-        updateDots(index);
-    }
-
-    function updateDots(index) {
-        dots.forEach((dot, i) => {
-            if (i === index) dot.classList.add('ativo');
-            else dot.classList.remove('ativo');
-        });
-        currentIndex = index;
-    }
-
-    carousel.addEventListener('scroll', () => {
-        const itemWidth = items[0].offsetWidth + 15;
-        const newIndex = Math.round(carousel.scrollLeft / itemWidth);
-        if (newIndex !== currentIndex && newIndex < items.length) {
-            updateDots(newIndex);
+        function scrollToIndex(index) {
+            const itemWidth = items[0].offsetWidth + 15; 
+            carousel.scrollTo({ left: index * itemWidth, behavior: 'smooth' });
+            updateDots(index);
         }
-    });
 
-    function startAutoScroll() {
-        autoScrollInterval = setInterval(() => {
-            let nextIndex = (currentIndex + 1) % items.length;
-            scrollToIndex(nextIndex);
-        }, 4000);
+        function updateDots(index) {
+            dots.forEach((dot, i) => {
+                if (i === index) dot.classList.add('ativo');
+                else dot.classList.remove('ativo');
+            });
+            currentIndex = index;
+        }
+
+        carousel.addEventListener('scroll', () => {
+            const itemWidth = items[0].offsetWidth + 15;
+            const newIndex = Math.round(carousel.scrollLeft / itemWidth);
+            if (newIndex !== currentIndex && newIndex < items.length) {
+                updateDots(newIndex);
+            }
+        });
+
+        function startAutoScroll() {
+            autoScrollInterval = setInterval(() => {
+                let nextIndex = (currentIndex + 1) % items.length;
+                scrollToIndex(nextIndex);
+            }, 4000);
+        }
+
+        function stopAutoScroll() {
+            clearInterval(autoScrollInterval);
+        }
+
+        startAutoScroll();
+
+        carousel.addEventListener('touchstart', stopAutoScroll, { passive: true });
+        carousel.addEventListener('mousedown', stopAutoScroll);
+        carousel.addEventListener('touchend', () => { setTimeout(startAutoScroll, 5000); });
     }
-
-    function stopAutoScroll() {
-        clearInterval(autoScrollInterval);
-    }
-
-    startAutoScroll();
-
-    carousel.addEventListener('touchstart', stopAutoScroll, { passive: true });
-    carousel.addEventListener('mousedown', stopAutoScroll);
-    
-    carousel.addEventListener('touchend', () => {
-        setTimeout(startAutoScroll, 5000);
-    });
 });
