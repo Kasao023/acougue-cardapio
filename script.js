@@ -24,6 +24,29 @@ let carrinho = [];
 let produtoAtual = null;
 
 // ============================================
+// NAVEGAÇÃO DE TELAS
+// ============================================
+window.entrarNaLoja = function() {
+    // O aviso de KG foi removido daqui, agora entra direto.
+    const telaHome = document.getElementById('tela-home');
+    const appPrincipal = document.getElementById('app-principal');
+    telaHome.style.opacity = '0';
+    setTimeout(() => {
+        telaHome.style.display = 'none';
+        appPrincipal.classList.remove('app-escondido');
+        window.scrollTo(0, 0);
+    }, 300);
+}
+
+window.voltarParaHome = function() {
+    const telaHome = document.getElementById('tela-home');
+    const appPrincipal = document.getElementById('app-principal');
+    appPrincipal.classList.add('app-escondido');
+    telaHome.style.display = 'flex';
+    setTimeout(() => { telaHome.style.opacity = '1'; }, 50);
+}
+
+// ============================================
 // SOBRE NÓS E ABAS
 // ============================================
 window.abrirSobreNos = function() {

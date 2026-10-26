@@ -11,8 +11,46 @@
 </head>
 <body>
 
+    <!-- ============ TELA INICIAL (CAPA) ============ -->
+    <div id="tela-home" class="tela-home">
+        <div class="overlay-fundo"></div>
+        <div class="home-topo">
+            <button class="btn-topo"><i class="bi bi-person"></i> Clique para entrar</button>
+        </div>
+        <div class="home-conteudo">
+            
+            <div class="home-logo mb-4">
+                <img src="casadecarnehs.png" alt="Casa de Carne H&S" class="logo-img">
+                <h2 class="mt-3 text-white fw-bold">Casa de Carne H&S</h2>
+                <p class="text-white-50 small">Qualidade & Preço Bom!</p>
+            </div>
+
+            <div class="home-botoes w-100" style="max-width: 400px;">
+                <button class="btn-home btn-delivery" onclick="window.entrarNaLoja()">
+                    <i class="bi bi-bicycle fs-4"></i> 
+                    <div class="text-start">
+                        <strong style="display:block;">DELIVERY</strong>
+                        <span style="font-size:0.75rem; font-weight:400;">Seg a Sáb até 19:30 - Taxa R$ 2,00</span>
+                    </div>
+                </button>
+                
+                <button class="btn-home btn-retirada" onclick="window.entrarNaLoja()">
+                    <i class="bi bi-shop fs-4"></i> 
+                    <div class="text-start">
+                        <strong style="display:block;">RETIRADA</strong>
+                        <span style="font-size:0.75rem; font-weight:400;">Retire no balcão da loja</span>
+                    </div>
+                </button>
+                
+                <button class="btn-home btn-sobre mt-2" onclick="window.abrirSobreNos()">
+                    <i class="bi bi-info-circle fs-5"></i> SOBRE NÓS
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ============ APP PRINCIPAL (CARDÁPIO) ============ -->
-    <div id="app-principal">
+    <div id="app-principal" class="app-escondido">
         
         <!-- 1. TOPO: LOGO, NOME E ESTRELAS -->
         <div class="topo-loja text-center">
@@ -50,7 +88,7 @@
                     <img src="banner-mapa.jpg" alt="Aviso: Unidades" class="img-fluid rounded-3" onerror="this.onerror=null; this.src='banner-mapa.jpeg'; this.onerror=function(){this.src='banner-mapa.png'; this.onerror=function(){this.src='banner-mapa.webp';};};">
                 </div>
             </div>
-            <!-- Pontinhos indicadores (igual ao print) -->
+            <!-- Pontinhos indicadores -->
             <div class="banner-dots">
                 <span class="dot ativo"></span>
                 <span class="dot"></span>
@@ -76,7 +114,7 @@
 
     <!-- ============ BARRA INFERIOR (FIXA) ============ -->
     <nav class="barra-navegacao">
-        <button class="nav-item text-danger" onclick="window.scrollTo(0,0)">
+        <button class="nav-item text-danger" onclick="window.voltarParaHome()">
             <i class="bi bi-house-door-fill"></i><span>Início</span>
         </button>
         <button class="nav-item" onclick="window.abrirCarrinho()">

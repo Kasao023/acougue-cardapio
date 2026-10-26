@@ -20,6 +20,47 @@ body {
     padding-bottom: 75px;
 }
 
+/* ============ TELA INICIAL (CAPA) ============ */
+.tela-home {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #2a2a2a 0%, #111111 100%);
+    z-index: 2000; 
+    display: flex; 
+    flex-direction: column; 
+    transition: opacity 0.3s;
+    overflow-y: auto; 
+}
+.overlay-fundo {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle, rgba(217,31,38,0.15) 0%, rgba(0,0,0,0.8) 100%);
+    pointer-events: none;
+}
+.home-topo { position: relative; z-index: 2; padding: 15px 20px; }
+.btn-topo { background: transparent; border: none; color: #fff; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+.home-conteudo { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 20px 30px 20px; text-align: center; }
+.home-logo { display: flex; flex-direction: column; align-items: center; }
+.logo-img { width: 120px; height: auto; object-fit: contain; border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+.home-botoes { display: flex; flex-direction: column; gap: 10px; }
+
+.btn-delivery, .btn-retirada {
+    background: #fff;
+    color: var(--texto);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-radius: 12px;
+    padding: 15px;
+    border: none;
+    width: 100%;
+    transition: transform 0.2s;
+}
+.btn-delivery:active, .btn-retirada:active { transform: scale(0.98); }
+.btn-delivery i { color: var(--vermelho); }
+.btn-retirada i { color: #007bff; }
+.btn-delivery strong, .btn-retirada strong { font-size: 1rem; color: var(--escuro); }
+.btn-sobre { background: #444; color: #fff; border: none; border-radius: 50px; padding: 12px; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: transform 0.2s; }
+
 /* ============ TOPO DA LOJA ============ */
 .topo-loja {
     background: #fff;
@@ -100,7 +141,7 @@ body {
     flex: 0 0 90%; 
     scroll-snap-align: start;
     border-radius: 12px;
-    height: 120px; /* Deixa a imagem mais baixa */
+    height: 120px; 
 }
 
 .banner-item img {
