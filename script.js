@@ -22,40 +22,23 @@ let categorias = [];
 let produtos = [];
 let carrinho = [];
 let produtoAtual = null;
-let avisoMostrado = false;
 
 // ============================================
-// NAVEGAÇÃO DE TELAS
+// SOBRE NÓS E ABAS
 // ============================================
-window.entrarNaLoja = function() {
-    if (!avisoMostrado) {
-        alert("As carnes são vendidas por KG e podem sofrer variações de peso/preço. Ao final do pedido enviaremos uma mensagem com o valor exato.");
-        avisoMostrado = true;
-    }
-    const telaHome = document.getElementById('tela-home');
-    const appPrincipal = document.getElementById('app-principal');
-    telaHome.style.opacity = '0';
-    setTimeout(() => {
-        telaHome.style.display = 'none';
-        appPrincipal.classList.remove('app-escondido');
-        window.scrollTo(0, 0);
-    }, 300);
-}
-
-window.voltarParaHome = function() {
-    const telaHome = document.getElementById('tela-home');
-    const appPrincipal = document.getElementById('app-principal');
-    appPrincipal.classList.add('app-escondido');
-    telaHome.style.display = 'flex';
-    setTimeout(() => { telaHome.style.opacity = '1'; }, 50);
-}
-
 window.abrirSobreNos = function() {
     document.getElementById('modalSobre').classList.add('show');
 }
 
 window.fecharSobreNos = function() {
     document.getElementById('modalSobre').classList.remove('show');
+}
+
+window.mudarAba = function(abaId, btn) {
+    document.querySelectorAll('.aba-btn').forEach(b => b.classList.remove('ativo'));
+    btn.classList.add('ativo');
+    document.querySelectorAll('.aba-conteudo').forEach(c => c.classList.remove('ativo'));
+    document.getElementById('aba-conteudo-' + abaId).classList.add('ativo');
 }
 
 // ============================================
@@ -143,7 +126,7 @@ function renderizarProdutos(filtro = '') {
         const produtosCat = produtos.filter(p => {
             const matchCat = p.menuId === cat.id;
             const matchBusca = termo === '' || p.nome.toLowerCase().includes(termo);
-            const estaDisponivel = p.disponivel !== false; // <-- FILTRO DE ESGOTADO
+            const estaDisponivel = p.disponivel !== false;
             return matchCat && matchBusca && estaDisponivel;
         });
         if (produtosCat.length === 0) return;
@@ -429,6 +412,62 @@ function mostrarToast(texto) {
 }
 
 // ============================================
-// INICIALIZAÇÃO
+// LÓGICA DO CARROSSEL DO BANNER
 // ============================================
-document.addEventListener('DOMContentLoaded', carregarDados);
+document.addEventListener('DOMContentLoaded', function() {
+    carregarDados();
+
+    const carousel = document.getElementById('bannerCarousel');
+    const dots = document.querySelectorAll('.banner-dots .dot');
+    const items = document.querySelectorAll('.banner-item');
+    
+    if (!carousel || items.length === 0) return;
+
+    let currentIndex = 0;
+    let autoScrollInterval;
+
+    function scrollToIndex(index) {
+        const itemWidth = items[0].offsetWidth + 15; // Largura do item + gap
+        carousel.scrollTo({
+            left: index * itemWidth,
+            behavior: 'smooth'
+        });
+        updateDots(index);
+    }
+
+    function updateDots(index) {
+        dots.forEach((dot, i) => {
+            if (i === index) dot.classList.add('ativo');
+            else dot.classList.remove('ativo');
+        });
+        currentIndex = index;
+    }
+
+    carousel.addEventListener('scroll', () => {
+        const itemWidth = items[0].offsetWidth + 15;
+        const newIndex = Math.round(carousel.scrollLeft / itemWidth);
+        if (newIndex !== currentIndex && newIndex < items.length) {
+            updateDots(newIndex);
+        }
+    });
+
+    function startAutoScroll() {
+        autoScrollInterval = setInterval(() => {
+            let nextIndex = (currentIndex + 1) % items.length;
+            scrollToIndex(nextIndex);
+        }, 4000);
+    }
+
+    function stopAutoScroll() {
+        clearInterval(autoScrollInterval);
+    }
+
+    startAutoScroll();
+
+    carousel.addEventListener('touchstart', stopAutoScroll, { passive: true });
+    carousel.addEventListener('mousedown', stopAutoScroll);
+    
+    carousel.addEventListener('touchend', () => {
+        setTimeout(startAutoScroll, 5000);
+    });
+});

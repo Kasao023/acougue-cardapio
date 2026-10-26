@@ -11,112 +11,61 @@
 </head>
 <body>
 
-    <!-- ============ TELA INICIAL (CAPA) ============ -->
-    <div id="tela-home" class="tela-home">
-        <div class="overlay-fundo"></div>
-        <div class="home-topo">
-            <button class="btn-topo"><i class="bi bi-person"></i> Clique para entrar</button>
-        </div>
-        <div class="home-conteudo">
-            <div class="home-logo">
-                <img src="casadecarnehs.png" alt="Casa de Carne H&S" class="logo-img">
-                <p class="mt-3">Qualidade & Preço Bom!</p>
-            </div>
-            <div class="home-status">
-                <span class="status-fechado">Aberto para pedidos <i class="bi bi-chevron-right"></i></span>
-            </div>
-            <div class="home-cidade">Angatuba - SP</div>
-            <div class="home-botoes">
-                <button class="btn-home" onclick="window.entrarNaLoja()">
-                    <i class="bi bi-bicycle"></i> DELIVERY
-                </button>
-                <button class="btn-home" onclick="window.entrarNaLoja()">
-                    <i class="bi bi-shop"></i> RETIRADA
-                </button>
-                <button class="btn-home btn-sobre" onclick="window.abrirSobreNos()">
-                    <i class="bi bi-info-circle"></i> SOBRE NÓS
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============ MODAL SOBRE NÓS (Customizado) ============ -->
-    <div id="modalSobre" class="custom-modal">
-        <div class="custom-modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-shop"></i> Sobre a H&S</h5>
-                <button type="button" class="btn-close" onclick="window.fecharSobreNos()"></button>
-            </div>
-            <div class="custom-modal-body">
-                <div class="text-center mb-3">
-                    <img src="casadecarnehs.png" alt="Logo H&S" style="width: 120px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                </div>
-                
-                <p style="font-size: 0.9rem; line-height: 1.5; text-align: justify; margin-bottom: 10px;">
-                    A <strong>Casa de Carnes H&S</strong> há mais de <strong>XX anos</strong> oferece aos seus clientes cortes diferenciados.
-                </p>
-                <p style="font-size: 0.9rem; line-height: 1.5; text-align: justify; margin-bottom: 10px;">
-                    Somos uma empresa familiar com simplicidade, humildade, qualidade e parceria. Nossa missão é comercializar os melhores produtos e serviços de carnes com excelência.
-                </p>
-                <p style="font-size: 0.9rem; line-height: 1.5; text-align: justify; font-weight: 600; color: var(--vermelho); margin-bottom: 20px;">
-                    Compromisso, qualidade e preço bom para nossos clientes!
-                </p>
-
-                <div class="info-box">
-                    <h6><i class="bi bi-clock-history text-danger"></i> Horário de Atendimento</h6>
-                    <ul class="lista-info">
-                        <li><span>Segunda a Sexta:</span> <strong>08:00 às 19:00</strong></li>
-                        <li><span>Sábado:</span> <strong>08:00 às 18:00</strong></li>
-                        <li><span>Domingo:</span> <strong>Fechado</strong></li>
-                    </ul>
-                </div>
-
-                <div class="info-box mt-3">
-                    <h6><i class="bi bi-credit-card text-danger"></i> Formas de Pagamento</h6>
-                    <ul class="lista-info">
-                        <li><i class="bi bi-check-circle-fill text-success"></i> PIX (CNPJ)</li>
-                        <li><i class="bi bi-check-circle-fill text-success"></i> Cartão de Crédito / Débito</li>
-                        <li><i class="bi bi-check-circle-fill text-success"></i> Dinheiro na entrega</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger w-100 fw-bold" onclick="window.fecharSobreNos()">Voltar ao Início</button>
-            </div>
-        </div>
-    </div>
-
     <!-- ============ APP PRINCIPAL (CARDÁPIO) ============ -->
-    <div id="app-principal" class="app-escondido">
-        <header class="header-fixo">
-            <div class="container header-inner">
-                <div class="brand">
-                    <button class="btn-voltar-header" onclick="window.voltarParaHome()"><i class="bi bi-arrow-left"></i></button>
-                    <h1 class="logo">Cardápio</h1>
-                </div>
-                <button class="btn-carrinho-header" onclick="window.abrirCarrinho()">
-                    <i class="bi bi-bag"></i>
-                    <span class="badge-carrinho" id="badge-carrinho">0</span>
-                </button>
+    <div id="app-principal">
+        
+        <!-- 1. TOPO: LOGO, NOME E ESTRELAS -->
+        <div class="topo-loja text-center">
+            <button class="btn-perfil-topo"><i class="bi bi-person-circle"></i></button>
+            
+            <img src="casadecarnehs.png" alt="Logo H&S" class="topo-logo">
+            <h2 class="topo-nome">Casa de Carne H&S <i class="bi bi-chevron-right fs-5 text-muted"></i></h2>
+            <div class="topo-avaliacao">
+                <i class="bi bi-star-fill text-warning"></i> <strong>5.0</strong> <span class="text-muted">(4105 avaliações)</span>
             </div>
-        </header>
+            <p class="text-muted small mb-0 mt-1">Pedido mínimo R$ 0,00</p>
+            
+            <div class="topo-status-fechado">
+                Aberto para pedidos
+            </div>
+        </div>
 
-        <section class="busca-area">
-            <div class="container">
-                <div class="busca-wrapper">
-                    <i class="bi bi-search"></i>
-                    <input type="text" id="busca" placeholder="Buscar corte, ex: picanha..." oninput="window.filtrarProdutos()">
+        <!-- 2. BARRA DE PESQUISA -->
+        <div class="container mt-3">
+            <div class="busca-wrapper">
+                <i class="bi bi-search"></i>
+                <input type="text" id="busca" placeholder="Buscar categoria, produto ou marca" oninput="window.filtrarProdutos()">
+            </div>
+        </div>
+
+        <!-- 3. BANNER DE AVISO (ROLAGEM HORIZONTAL) -->
+        <div class="banner-scroll-container mt-3">
+            <div class="banner-scroll" id="bannerCarousel">
+                <!-- Banner KG -->
+                <div class="banner-item">
+                    <img src="banner-kg.jpg" alt="Aviso: Carnes vendidas por KG" class="img-fluid rounded-3" onerror="this.onerror=null; this.src='banner-kg.jpeg'; this.onerror=function(){this.src='banner-kg.png'; this.onerror=function(){this.src='banner-kg.webp';};};">
+                </div>
+                <!-- Banner Mapa -->
+                <div class="banner-item">
+                    <img src="banner-mapa.jpg" alt="Aviso: Unidades" class="img-fluid rounded-3" onerror="this.onerror=null; this.src='banner-mapa.jpeg'; this.onerror=function(){this.src='banner-mapa.png'; this.onerror=function(){this.src='banner-mapa.webp';};};">
                 </div>
             </div>
-        </section>
+            <!-- Pontinhos indicadores (igual ao print) -->
+            <div class="banner-dots">
+                <span class="dot ativo"></span>
+                <span class="dot"></span>
+            </div>
+        </div>
 
-        <nav class="categorias-nav">
+        <!-- 4. CATEGORIAS (CHIPS) -->
+        <nav class="categorias-nav mt-3">
             <div class="container">
                 <div class="categorias-scroll" id="categorias-scroll"></div>
             </div>
         </nav>
 
-        <main class="container my-2 main-content">
+        <!-- 5. LISTA DE PRODUTOS -->
+        <main class="container my-4 main-content">
             <div id="loading" class="text-center py-5">
                 <div class="spinner-border text-danger" role="status"></div>
                 <p class="mt-3 text-muted">Carregando produtos...</p>
@@ -127,8 +76,8 @@
 
     <!-- ============ BARRA INFERIOR (FIXA) ============ -->
     <nav class="barra-navegacao">
-        <button class="nav-item" onclick="window.voltarParaHome()">
-            <i class="bi bi-house"></i><span>Início</span>
+        <button class="nav-item text-danger" onclick="window.scrollTo(0,0)">
+            <i class="bi bi-house-door-fill"></i><span>Início</span>
         </button>
         <button class="nav-item" onclick="window.abrirCarrinho()">
             <i class="bi bi-cart"></i><span>Carrinho</span>
@@ -140,6 +89,70 @@
             <i class="bi bi-info-circle"></i><span>Sobre</span>
         </button>
     </nav>
+
+    <!-- ============ MODAL SOBRE NÓS (Com Abas) ============ -->
+    <div id="modalSobre" class="custom-modal">
+        <div class="custom-modal-content">
+            <div class="sobre-header text-center pt-4 pb-3 position-relative">
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3" onclick="window.fecharSobreNos()"></button>
+                <img src="casadecarnehs.png" alt="Logo H&S" style="width: 80px; border-radius: 50%; margin-bottom: 10px;">
+                <h4 class="fw-bold mb-1">Casa de Carne H&S</h4>
+                <p class="text-muted small mb-0"><i class="bi bi-star-fill text-warning"></i> 5.0 (Avaliações)</p>
+            </div>
+            
+            <div class="abas-container">
+                <button class="aba-btn ativo" onclick="window.mudarAba('sobre', this)">Sobre</button>
+                <button class="aba-btn" onclick="window.mudarAba('horarios', this)">Horários</button>
+                <button class="aba-btn" onclick="window.mudarAba('pagamento', this)">Pagamento</button>
+            </div>
+
+            <div class="custom-modal-body bg-white p-4">
+                <div id="aba-conteudo-sobre" class="aba-conteudo ativo">
+                    <h6 class="fw-bold text-dark mb-2">Descrição</h6>
+                    <p class="text-muted small" style="line-height: 1.5;">
+                        A <strong>Casa de Carnes H&S</strong> há mais de XX anos oferece aos seus clientes cortes diferenciados. Somos uma empresa familiar com simplicidade, humildade, qualidade e parceria.
+                    </p>
+                    <p class="text-muted small" style="line-height: 1.5;">
+                        Nossa missão é comercializar os melhores produtos e serviços de carnes com excelência. Compromisso, qualidade e preço bom para nossos clientes!
+                    </p>
+                    <h6 class="fw-bold text-dark mt-4 mb-2">Endereço</h6>
+                    <p class="text-muted small mb-0">
+                        Angatuba - SP<br>
+                        (Consulte o endereço completo no momento da entrega)
+                    </p>
+                </div>
+
+                <div id="aba-conteudo-horarios" class="aba-conteudo">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-clock text-danger"></i> Horário de Atendimento</h6>
+                    <div class="info-box">
+                        <ul class="lista-info">
+                            <li><span>Segunda a Sexta:</span> <strong>08:00 às 19:00</strong></li>
+                            <li><span>Sábado:</span> <strong>08:00 às 18:00</strong></li>
+                            <li><span>Domingo:</span> <strong>Fechado</strong></li>
+                        </ul>
+                    </div>
+                    <p class="text-muted small mt-3">
+                        <i class="bi bi-info-circle"></i> O delivery funciona de Seg a Sáb até as 19:30.
+                    </p>
+                </div>
+
+                <div id="aba-conteudo-pagamento" class="aba-conteudo">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-credit-card text-danger"></i> Formas de Pagamento</h6>
+                    <div class="info-box">
+                        <ul class="lista-info">
+                            <li><i class="bi bi-check-circle-fill text-success"></i> PIX (CNPJ)</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Cartão de Crédito / Débito</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Dinheiro na entrega</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-3 border-top text-center bg-light">
+                <button type="button" class="btn btn-outline-danger w-100 fw-bold" onclick="window.fecharSobreNos()">Fechar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ============ MODAL ADICIONAR ============ -->
     <div class="modal fade" id="modalPeso" tabindex="-1">

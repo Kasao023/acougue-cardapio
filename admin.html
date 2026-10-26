@@ -112,7 +112,6 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Categoria</label>
                         <select id="edit-categoria" class="form-select">
-                            <!-- Preenchido via JS -->
                         </select>
                     </div>
 
@@ -139,7 +138,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <script>
-        const SENHA_ADMIN = "1234"; // TROQUE AQUI
+        const SENHA_ADMIN = "1234"; 
 
         const firebaseConfig = {
           apiKey: "AIzaSyAgUXojOAljeRudGNRF9rcvAJ4CNJSVF-s",
@@ -171,20 +170,14 @@
         function carregarDadosAdmin() {
             db.ref('Category').once('value').then(snap => {
                 categoriasGlobais = [];
-                
                 snap.forEach(c => {
                     const val = c.val();
-                    if (val && val.name) {
-                        categoriasGlobais.push({ id: c.key, nome: val.name });
-                    }
+                    if (val && val.name) categoriasGlobais.push({ id: c.key, nome: val.name });
                 });
-
                 categoriasGlobais.sort((a, b) => a.nome.localeCompare(b.nome));
 
                 let selectHtml = '';
-                categoriasGlobais.forEach(c => {
-                    selectHtml += `<option value="${c.id}">${c.nome}</option>`;
-                });
+                categoriasGlobais.forEach(c => { selectHtml += `<option value="${c.id}">${c.nome}</option>`; });
                 document.getElementById('edit-categoria').innerHTML = selectHtml;
 
                 renderizarFiltros();
@@ -204,7 +197,7 @@
                 });
                 filtrarAdmin(); 
             }).catch(err => {
-                console.error("Erro ao carregar dados:", err);
+                console.error("Erro:", err);
                 alert("Erro ao carregar os dados.");
             });
         }
@@ -212,11 +205,9 @@
         function renderizarFiltros() {
             const container = document.getElementById('filtros-categorias');
             let html = `<button class="filtro-chip ${filtroAtual === 'todos' ? 'ativo' : ''}" onclick="mudarFiltro('todos', this)">Todos</button>`;
-            
             categoriasGlobais.forEach(c => {
                 html += `<button class="filtro-chip ${filtroAtual === c.id ? 'ativo' : ''}" onclick="mudarFiltro('${c.id}', this)">${c.nome}</button>`;
             });
-            
             container.innerHTML = html;
         }
 
@@ -225,13 +216,11 @@
             document.querySelectorAll('.filtro-chip').forEach(b => b.classList.remove('ativo'));
             if (btn) btn.classList.add('ativo');
             
-            if(id === 'todos') {
-                document.getElementById('titulo-lista').innerText = "Todos os Produtos";
-            } else {
+            if(id === 'todos') document.getElementById('titulo-lista').innerText = "Todos os Produtos";
+            else {
                 const cat = categoriasGlobais.find(c => c.id === id);
                 document.getElementById('titulo-lista').innerText = cat ? cat.nome : "Produtos";
             }
-
             filtrarAdmin();
         }
 
@@ -246,13 +235,11 @@
                 const matchEsgotado = !soEsgotados || !disponivel;
                 return matchBusca && matchCategoria && matchEsgotado;
             });
-
             renderizarListaAdmin(filtrados);
         }
 
         function renderizarListaAdmin(lista) {
             const container = document.getElementById('lista-admin');
-            
             if (lista.length === 0) {
                 container.innerHTML = `<div class="text-center text-muted p-4"><i class="bi bi-search fs-3 d-block mb-2"></i> Nenhum produto encontrado.</div>`;
                 return;
@@ -261,11 +248,7 @@
             let html = '';
             lista.forEach(p => {
                 const disponivel = p.disponivel !== false;
-                
-                const badgeEsgotado = !disponivel 
-                    ? `<span class="badge bg-secondary badge-esgotado">ESGOTADO</span>` 
-                    : '';
-                
+                const badgeEsgotado = !disponivel ? `<span class="badge bg-secondary badge-esgotado">ESGOTADO</span>` : '';
                 const btnToggle = disponivel
                     ? `<button class="btn-acao btn-disponivel" onclick="toggleDisponibilidade('${p.id}', true)" title="Marcar como esgotado"><i class="bi bi-eye-fill"></i></button>`
                     : `<button class="btn-acao btn-esgotado" onclick="toggleDisponibilidade('${p.id}', false)" title="Reativar produto"><i class="bi bi-eye-slash-fill"></i></button>`;
@@ -287,16 +270,12 @@
                     </div>
                 `;
             });
-
             container.innerHTML = html;
         }
 
         function toggleDisponibilidade(id, estaDisponivel) {
             const novoStatus = !estaDisponivel;
-            const acao = novoStatus 
-                ? 'reativar este produto (voltar a aparecer no site)' 
-                : 'marcar como ESGOTADO (esconder do site)';
-            
+            const acao = novoStatus ? 'reativar este produto (voltar a aparecer no site)' : 'marcar como ESGOTADO (esconder do site)';
             if (!confirm(`Deseja ${acao}?`)) return;
             
             db.ref('Foods/' + id).update({ disponivel: novoStatus })
@@ -305,35 +284,26 @@
                     if (prod) prod.disponivel = novoStatus;
                     filtrarAdmin();
                 })
-                .catch(err => {
-                    console.error(err);
-                    alert('Erro ao atualizar. Tente novamente.');
-                });
+                .catch(err => { console.error(err); alert('Erro ao atualizar.'); });
         }
 
         function previewImagem(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 600; 
-                    let width = img.width;
-                    let height = img.height;
-
+                    let width = img.width, height = img.height;
                     if (width > MAX_WIDTH) {
                         height = Math.round((height * MAX_WIDTH) / width);
                         width = MAX_WIDTH;
                     }
-
-                    canvas.width = width;
-                    canvas.height = height;
+                    canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-
                     const base64 = canvas.toDataURL('image/jpeg', 0.7);
                     
                     document.getElementById('edit-imagem-base64').value = base64;
@@ -353,11 +323,9 @@
             document.getElementById('edit-preco').value = '';
             document.getElementById('edit-imagem-base64').value = '';
             document.getElementById('edit-file').value = '';
-            
             document.getElementById('img-preview').src = '';
             document.getElementById('img-preview').style.display = 'none';
             document.getElementById('no-img-text').style.display = 'flex';
-
             new bootstrap.Modal(document.getElementById('modalEditar')).show();
         }
 
@@ -370,8 +338,8 @@
             document.getElementById('edit-nome').value = p.nome;
             document.getElementById('edit-preco').value = p.preco;
             document.getElementById('edit-categoria').value = p.menuId;
-            
             document.getElementById('edit-imagem-base64').value = p.imagem;
+            
             if (p.imagem) {
                 document.getElementById('img-preview').src = p.imagem;
                 document.getElementById('img-preview').style.display = 'block';
@@ -380,7 +348,6 @@
                 document.getElementById('img-preview').style.display = 'none';
                 document.getElementById('no-img-text').style.display = 'flex';
             }
-
             document.getElementById('edit-file').value = '';
             new bootstrap.Modal(document.getElementById('modalEditar')).show();
         }
@@ -392,26 +359,16 @@
             const imagem = document.getElementById('edit-imagem-base64').value;
             const categoria = document.getElementById('edit-categoria').value;
 
-            if (!nome || !preco) {
-                alert("Preencha o nome e o preço!");
-                return;
-            }
+            if (!nome || !preco) { alert("Preencha o nome e o preço!"); return; }
 
             const dados = {
-                name: nome,
-                price: preco,
-                image: imagem,
-                menuId: categoria,
-                description: "",
-                discount: "",
-                validadeFim: "",
-                validadeInicio: ""
+                name: nome, price: preco, image: imagem, menuId: categoria,
+                description: "", discount: "", validadeFim: "", validadeInicio: ""
             };
 
             if (id) {
                 const prodAtual = produtosGlobais.find(p => p.id === id);
                 dados.disponivel = prodAtual ? (prodAtual.disponivel !== false) : true;
-                
                 db.ref('Foods/' + id).update(dados).then(() => {
                     alert("Produto atualizado com sucesso!");
                     bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
@@ -419,7 +376,6 @@
                 });
             } else {
                 dados.disponivel = true;
-                
                 db.ref('Foods').push(dados).then(() => {
                     alert("Produto criado com sucesso!");
                     bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
@@ -430,9 +386,7 @@
 
         function excluirProduto(id) {
             if (confirm("Tem certeza que deseja excluir este produto?")) {
-                db.ref('Foods/' + id).remove().then(() => {
-                    carregarDadosAdmin();
-                });
+                db.ref('Foods/' + id).remove().then(() => { carregarDadosAdmin(); });
             }
         }
     </script>
