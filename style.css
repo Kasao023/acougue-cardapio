@@ -42,14 +42,13 @@ body {
 .logo-img { width: 120px; height: auto; object-fit: contain; border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
 .home-botoes { display: flex; flex-direction: column; gap: 10px; }
 
-/* Botões redondinhos restaurados */
 .btn-home { 
     background: var(--vermelho); 
     color: #fff; 
     border: none; 
     border-radius: 50px; 
-    padding: 12px; 
-    font-size: 0.95rem; 
+    padding: 14px; 
+    font-size: 1rem; 
     font-weight: 700; 
     display: flex; 
     align-items: center; 
@@ -62,21 +61,57 @@ body {
 .btn-home:active { transform: scale(0.96); }
 .btn-sobre { background: #444; box-shadow: none; }
 
+/* ============ TOPO DO CARRINHO ============ */
+.header-carrinho {
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--cinza-borda);
+}
+.btn-voltar-header { background: none; border: none; font-size: 1.2rem; color: var(--texto); }
+.logo { font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--escuro); }
+
+.btn-carrinho-header { 
+    background: var(--vermelho-claro); 
+    color: var(--vermelho); 
+    border: none; 
+    width: 40px; 
+    height: 40px; 
+    border-radius: 50%; 
+    font-size: 1.1rem; 
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.badge-carrinho { 
+    position: absolute; 
+    top: -4px; 
+    right: -4px; 
+    background: var(--vermelho); 
+    color: #fff; 
+    font-size: 0.65rem; 
+    font-weight: 700;
+    width: 18px; 
+    height: 18px; 
+    border-radius: 50%; 
+    display: none; /* O JS vai mudar para flex */
+    align-items: center; 
+    justify-content: center; 
+    border: 2px solid #fff; 
+}
+
 /* ============ TOPO DA LOJA ============ */
 .topo-loja {
     background: #fff;
     padding: 20px 15px 0 15px;
     position: relative;
     border-bottom: 1px solid var(--cinza-borda);
-}
-.btn-perfil-topo {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--escuro);
 }
 .topo-logo {
     width: 80px;
@@ -122,11 +157,8 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
 
-/* ============ BANNER DE ROLAGEM (AVISO KG) ============ */
-.banner-scroll-container {
-    overflow: hidden;
-    padding-left: 15px; 
-}
+/* ============ BANNER ============ */
+.banner-scroll-container { overflow: hidden; padding-left: 15px; }
 .banner-scroll {
     display: flex;
     gap: 15px;
@@ -171,7 +203,7 @@ body {
 }
 
 /* ============ CATEGORIAS E PRODUTOS ============ */
-.categorias-nav { background: #fff; padding: 10px 0; position: sticky; top: 0; z-index: 99; }
+.categorias-nav { background: #fff; padding: 10px 0; position: sticky; top: 64px; z-index: 99; border-bottom: 1px solid var(--cinza-borda); }
 .categorias-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 0 15px; scrollbar-width: none; }
 .categoria-chip { background: #fff; border: 1px solid var(--cinza-borda); padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; white-space: nowrap; color: var(--texto); transition: 0.2s; }
 .categoria-chip.ativo { background: var(--vermelho-claro); color: var(--vermelho); border-color: var(--vermelho); }
@@ -211,9 +243,10 @@ body {
 .btn-corte { background: var(--cinza-claro); border: 1.5px solid var(--cinza-borda); color: var(--texto); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin: 0; }
 .btn-check:checked + .btn-corte { background: var(--vermelho); color: #fff; border-color: var(--vermelho); }
 
-.carrinho-lateral { position: fixed; top: 0; right: -100%; width: 100%; max-width: 400px; height: 100%; background: #fff; z-index: 1600; transition: 0.3s; display: flex; flex-direction: column; }
+/* CARRINHO LATERAL (Z-INDEX ACIMA DA BARRA INFERIOR) */
+.carrinho-lateral { position: fixed; top: 0; right: -100%; width: 100%; max-width: 400px; height: 100%; background: #fff; z-index: 3000; transition: 0.3s; display: flex; flex-direction: column; }
 .carrinho-lateral.ativo { right: 0; }
-.carrinho-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1500; opacity: 0; visibility: hidden; transition: 0.3s; }
+.carrinho-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2999; opacity: 0; visibility: hidden; transition: 0.3s; }
 .carrinho-overlay.ativo { opacity: 1; visibility: visible; }
 .carrinho-header { background: var(--escuro); color: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
 .carrinho-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
@@ -235,7 +268,7 @@ body {
 .sem-produtos { text-align: center; padding: 50px 20px; color: var(--texto-suave); }
 
 /* ============ MODAL SOBRE NÓS E ABAS ============ */
-.custom-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 15px; }
+.custom-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 15px; }
 .custom-modal.show { display: flex; }
 .custom-modal-content { background: #fff; border-radius: 20px; width: 100%; max-width: 500px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: modalFadeIn 0.3s; overflow: hidden; }
 @keyframes modalFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

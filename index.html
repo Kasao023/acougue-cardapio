@@ -18,7 +18,6 @@
             <button class="btn-topo"><i class="bi bi-person"></i> Clique para entrar</button>
         </div>
         <div class="home-conteudo">
-            
             <div class="home-logo mb-4">
                 <img src="casadecarnehs.png" alt="Casa de Carne H&S" class="logo-img">
                 <h2 class="mt-3 text-white fw-bold">Casa de Carne H&S</h2>
@@ -26,15 +25,14 @@
             </div>
 
             <div class="home-botoes w-100" style="max-width: 400px;">
-                <!-- Botões redondinhos restaurados -->
                 <button class="btn-home" onclick="window.entrarNaLoja()">
-                    <i class="bi bi-bicycle"></i> DELIVERY
+                    <i class="bi bi-bicycle fs-5"></i> DELIVERY
                 </button>
                 <button class="btn-home" onclick="window.entrarNaLoja()">
-                    <i class="bi bi-shop"></i> RETIRADA
+                    <i class="bi bi-shop fs-5"></i> RETIRADA
                 </button>
                 <button class="btn-home btn-sobre" onclick="window.abrirSobreNos()">
-                    <i class="bi bi-info-circle"></i> SOBRE NÓS
+                    <i class="bi bi-info-circle fs-5"></i> SOBRE NÓS
                 </button>
             </div>
         </div>
@@ -43,10 +41,19 @@
     <!-- ============ APP PRINCIPAL (CARDÁPIO) ============ -->
     <div id="app-principal" class="app-escondido">
         
-        <!-- 1. TOPO: LOGO, NOME E ESTRELAS -->
+        <!-- 1. TOPO COM CARRINHO -->
+        <div class="header-carrinho">
+            <button class="btn-voltar-header" onclick="window.voltarParaHome()"><i class="bi bi-arrow-left"></i></button>
+            <h1 class="logo">Cardápio</h1>
+            <button class="btn-carrinho-header" onclick="window.abrirCarrinho()">
+                <i class="bi bi-bag"></i>
+                <!-- O CONTADOR DO CARRINHO ESTÁ AQUI -->
+                <span class="badge-carrinho" id="badge-carrinho">0</span>
+            </button>
+        </div>
+
+        <!-- 2. TOPO DA LOJA (LOGO, NOME E ESTRELAS) -->
         <div class="topo-loja text-center">
-            <button class="btn-perfil-topo"><i class="bi bi-person-circle"></i></button>
-            
             <img src="casadecarnehs.png" alt="Logo H&S" class="topo-logo">
             <h2 class="topo-nome">Casa de Carne H&S <i class="bi bi-chevron-right fs-5 text-muted"></i></h2>
             <div class="topo-avaliacao">
@@ -59,7 +66,7 @@
             </div>
         </div>
 
-        <!-- 2. BARRA DE PESQUISA -->
+        <!-- 3. BARRA DE PESQUISA -->
         <div class="container mt-3">
             <div class="busca-wrapper">
                 <i class="bi bi-search"></i>
@@ -67,33 +74,30 @@
             </div>
         </div>
 
-        <!-- 3. BANNER DE AVISO (ROLAGEM HORIZONTAL) -->
+        <!-- 4. BANNER CARROSSEL -->
         <div class="banner-scroll-container mt-3">
             <div class="banner-scroll" id="bannerCarousel">
-                <!-- Banner KG -->
                 <div class="banner-item">
-                    <img src="banner-kg.jpg" alt="Aviso: Carnes vendidas por KG" class="img-fluid rounded-3" onerror="this.onerror=null; this.src='banner-kg.jpeg'; this.onerror=function(){this.src='banner-kg.png'; this.onerror=function(){this.src='banner-kg.webp';};};">
+                    <img src="banner-kg.jpg" alt="Aviso: Carnes vendidas por KG" onerror="this.onerror=null; this.src='banner-kg.jpeg'; this.onerror=function(){this.src='banner-kg.png';};">
                 </div>
-                <!-- Banner Mapa -->
                 <div class="banner-item">
-                    <img src="banner-mapa.jpg" alt="Aviso: Unidades" class="img-fluid rounded-3" onerror="this.onerror=null; this.src='banner-mapa.jpeg'; this.onerror=function(){this.src='banner-mapa.png'; this.onerror=function(){this.src='banner-mapa.webp';};};">
+                    <img src="banner-mapa.jpg" alt="Aviso: Unidades" onerror="this.onerror=null; this.src='banner-mapa.jpeg'; this.onerror=function(){this.src='banner-mapa.png';};">
                 </div>
             </div>
-            <!-- Pontinhos indicadores -->
             <div class="banner-dots">
                 <span class="dot ativo"></span>
                 <span class="dot"></span>
             </div>
         </div>
 
-        <!-- 4. CATEGORIAS (CHIPS) -->
+        <!-- 5. CATEGORIAS -->
         <nav class="categorias-nav mt-3">
             <div class="container">
                 <div class="categorias-scroll" id="categorias-scroll"></div>
             </div>
         </nav>
 
-        <!-- 5. LISTA DE PRODUTOS -->
+        <!-- 6. PRODUTOS -->
         <main class="container my-4 main-content">
             <div id="loading" class="text-center py-5">
                 <div class="spinner-border text-danger" role="status"></div>
@@ -103,10 +107,10 @@
         </main>
     </div>
 
-    <!-- ============ BARRA INFERIOR (FIXA) ============ -->
+    <!-- BARRA INFERIOR -->
     <nav class="barra-navegacao">
-        <button class="nav-item text-danger" onclick="window.voltarParaHome()">
-            <i class="bi bi-house-door-fill"></i><span>Início</span>
+        <button class="nav-item" onclick="window.voltarParaHome()">
+            <i class="bi bi-house-door"></i><span>Início</span>
         </button>
         <button class="nav-item" onclick="window.abrirCarrinho()">
             <i class="bi bi-cart"></i><span>Carrinho</span>
@@ -119,7 +123,7 @@
         </button>
     </nav>
 
-    <!-- ============ MODAL SOBRE NÓS (Com Abas) ============ -->
+    <!-- MODAL SOBRE NÓS -->
     <div id="modalSobre" class="custom-modal">
         <div class="custom-modal-content">
             <div class="sobre-header text-center pt-4 pb-3 position-relative">
@@ -145,10 +149,7 @@
                         Nossa missão é comercializar os melhores produtos e serviços de carnes com excelência. Compromisso, qualidade e preço bom para nossos clientes!
                     </p>
                     <h6 class="fw-bold text-dark mt-4 mb-2">Endereço</h6>
-                    <p class="text-muted small mb-0">
-                        Angatuba - SP<br>
-                        (Consulte o endereço completo no momento da entrega)
-                    </p>
+                    <p class="text-muted small mb-0">Angatuba - SP</p>
                 </div>
 
                 <div id="aba-conteudo-horarios" class="aba-conteudo">
@@ -160,16 +161,14 @@
                             <li><span>Domingo:</span> <strong>Fechado</strong></li>
                         </ul>
                     </div>
-                    <p class="text-muted small mt-3">
-                        <i class="bi bi-info-circle"></i> O delivery funciona de Seg a Sáb até as 19:30.
-                    </p>
+                    <p class="text-muted small mt-3"><i class="bi bi-info-circle"></i> Delivery funciona de Seg a Sáb até as 19:30.</p>
                 </div>
 
                 <div id="aba-conteudo-pagamento" class="aba-conteudo">
                     <h6 class="fw-bold text-dark mb-3"><i class="bi bi-credit-card text-danger"></i> Formas de Pagamento</h6>
                     <div class="info-box">
                         <ul class="lista-info">
-                            <li><i class="bi bi-check-circle-fill text-success"></i> PIX (CNPJ)</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> PIX</li>
                             <li><i class="bi bi-check-circle-fill text-success"></i> Cartão de Crédito / Débito</li>
                             <li><i class="bi bi-check-circle-fill text-success"></i> Dinheiro na entrega</li>
                         </ul>
@@ -183,7 +182,7 @@
         </div>
     </div>
 
-    <!-- ============ MODAL ADICIONAR ============ -->
+    <!-- MODAL ADICIONAR PRODUTO -->
     <div class="modal fade" id="modalPeso" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content modal-add">
@@ -226,13 +225,10 @@
                         <div class="d-flex flex-wrap gap-2">
                             <input type="radio" class="btn-check" name="tipoCorte" id="corte-inteiro" value="Inteiro" checked>
                             <label class="btn-corte" for="corte-inteiro">Inteiro</label>
-
                             <input type="radio" class="btn-check" name="tipoCorte" id="corte-bife" value="Em Bifes">
                             <label class="btn-corte" for="corte-bife">Em Bifes</label>
-
                             <input type="radio" class="btn-check" name="tipoCorte" id="corte-cubo" value="Em Cubos">
                             <label class="btn-corte" for="corte-cubo">Em Cubos</label>
-
                             <input type="radio" class="btn-check" name="tipoCorte" id="corte-moido" value="Moído">
                             <label class="btn-corte" for="corte-moido">Moído</label>
                         </div>
@@ -240,7 +236,7 @@
 
                     <div class="mt-3">
                         <label class="form-label fw-bold small">Observação (Opcional)</label>
-                        <textarea class="form-control" id="modal-observacao" rows="2" placeholder="Ex: Moer 2x, tirar a gordura, cortar fino..."></textarea>
+                        <textarea class="form-control" id="modal-observacao" rows="2" placeholder="Ex: Moer 2x, tirar a gordura..."></textarea>
                     </div>
 
                     <div class="modal-subtotal mt-3">
@@ -256,7 +252,7 @@
         </div>
     </div>
 
-    <!-- ============ CARRINHO LATERAL ============ -->
+    <!-- CARRINHO LATERAL -->
     <div class="carrinho-overlay" id="carrinho-overlay" onclick="window.fecharCarrinho()"></div>
     <aside class="carrinho-lateral" id="carrinho-lateral">
         <div class="carrinho-header">
@@ -272,7 +268,7 @@
                 </div>
             </div>
             <button class="btn-finalizar" onclick="window.finalizarPedido()">
-                <i class="bi bi-whatsapp"></i> Finalizar Pedido
+                <i class="bi bi-whatsapp"></i> Finalizar no WhatsApp
             </button>
         </div>
     </aside>

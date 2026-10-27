@@ -15,7 +15,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// ⚠️ CONFIGURAÇÕES DO CLIENTE (ALTERE AQUI ANTES DE SUBIR)
+// Coloque o número com DDD e o 55 na frente. Ex: 5515998183052
 const WHATSAPP = "5515998183052"; 
+// Coloque o CNPJ, CPF, e-mail ou telefone (com 55)
 const CHAVE_PIX = "00.000.000/0000-00"; 
 
 let categorias = [];
@@ -29,37 +32,31 @@ let produtoAtual = null;
 window.entrarNaLoja = function() {
     const telaHome = document.getElementById('tela-home');
     const appPrincipal = document.getElementById('app-principal');
-    if (telaHome && appPrincipal) {
-        telaHome.style.opacity = '0';
-        setTimeout(() => {
-            telaHome.style.display = 'none';
-            appPrincipal.classList.remove('app-escondido');
-            window.scrollTo(0, 0);
-        }, 300);
-    }
+    telaHome.style.opacity = '0';
+    setTimeout(() => {
+        telaHome.style.display = 'none';
+        appPrincipal.classList.remove('app-escondido');
+        window.scrollTo(0, 0);
+    }, 300);
 }
 
 window.voltarParaHome = function() {
     const telaHome = document.getElementById('tela-home');
     const appPrincipal = document.getElementById('app-principal');
-    if (telaHome && appPrincipal) {
-        appPrincipal.classList.add('app-escondido');
-        telaHome.style.display = 'flex';
-        setTimeout(() => { telaHome.style.opacity = '1'; }, 50);
-    }
+    appPrincipal.classList.add('app-escondido');
+    telaHome.style.display = 'flex';
+    setTimeout(() => { telaHome.style.opacity = '1'; }, 50);
 }
 
 // ============================================
-// SOBRE NÓS E ABAS
+// MODAL SOBRE NÓS
 // ============================================
 window.abrirSobreNos = function() {
     document.getElementById('modalSobre').classList.add('show');
 }
-
 window.fecharSobreNos = function() {
     document.getElementById('modalSobre').classList.remove('show');
 }
-
 window.mudarAba = function(abaId, btn) {
     document.querySelectorAll('.aba-btn').forEach(b => b.classList.remove('ativo'));
     btn.classList.add('ativo');
@@ -191,7 +188,7 @@ window.filtrarProdutos = function() {
 }
 
 // ============================================
-// MODAL DE PESO, CORTE E OBSERVAÇÃO
+// MODAL DE ADIÇÃO
 // ============================================
 window.abrirModalPeso = function(produtoId) {
     const prod = produtos.find(p => p.id === produtoId);
@@ -301,16 +298,14 @@ function atualizarCarrinho() {
     if (badge) {
         if (carrinho.length > 0) {
             badge.textContent = carrinho.length;
-            badge.classList.add('visivel');
+            badge.style.display = 'flex';
         } else {
-            badge.classList.remove('visivel');
+            badge.style.display = 'none';
         }
     }
 
     const body = document.getElementById('carrinho-body');
     const footer = document.getElementById('carrinho-footer');
-
-    if (!body || !footer) return;
 
     if (carrinho.length === 0) {
         body.innerHTML = `<div class="carrinho-vazio"><i class="bi bi-cart-x"></i><h5>Seu carrinho está vazio</h5><p class="small">Adicione produtos para começar</p></div>`;
@@ -380,56 +375,62 @@ function carregarCarrinhoSalvo() {
 }
 
 // ============================================
-// FINALIZAR PEDIDO (WhatsApp + PIX)
+// FINALIZAR PEDIDO (VERSÃO CORRIGIDA PARA O WHATSAPP)
 // ============================================
 window.finalizarPedido = function() {
-    if (carrinho.length === 0) { alert('Seu carrinho está vazio!'); return; }
+    if (carrinho.length === 0) { 
+        alert('Seu carrinho está vazio! Adicione produtos para fazer o pedido.'); 
+        return; 
+    }
 
     let total = 0;
-    let mensagem = `*🥩 NOVO PEDIDO - CASA DE CARNE H&S*%0A%0A`;
-    mensagem += `━━━━━━━━━━━━━━━━━━%0A`;
-    mensagem += `*🛒 ITENS DO PEDIDO*%0A`;
+    
+    // Usando quebra de linha \n e texto limpo para o WhatsApp não bugar
+    let mensagem = `*NOVO PEDIDO - CASA DE CARNE H&S*\n`;
+    mensagem += `----------------------------------------\n\n`;
+    mensagem += `*ITENS DO PEDIDO:*\n`;
 
     carrinho.forEach(item => {
         total += item.subtotal;
-        const precoKgFmt = item.precoKg.toFixed(2).replace('.', ',');
         const subtotalFmt = item.subtotal.toFixed(2).replace('.', ',');
 
-        mensagem += `%0A▪️ *${item.nome}*%0A`;
-        mensagem += `   Qtd: ${item.quantidadeExibir}%0A`;
-        mensagem += `   Preço: R$ ${precoKgFmt}${item.unidade === 'kg' ? '/kg' : '/un'}%0A`;
+        mensagem += `\n- *${item.nome}*\n`;
+        mensagem += `  Qtd: ${item.quantidadeExibir}\n`;
         
-        if (item.tipoCorte) mensagem += `   ✂️ Corte: *${item.tipoCorte}*%0A`;
-        if (item.observacao) mensagem += `   📝 Obs: *${item.observacao}*%0A`;
+        if (item.tipoCorte) mensagem += `  Corte: ${item.tipoCorte}\n`;
+        if (item.observacao) mensagem += `  Obs: ${item.observacao}\n`;
         
-        mensagem += `   Subtotal: R$ ${subtotalFmt}%0A`;
+        mensagem += `  Subtotal: R$ ${subtotalFmt}\n`;
     });
 
-    mensagem += `%0A━━━━━━━━━━━━━━━━━━%0A`;
-    mensagem += `*💰 TOTAL: R$ ${total.toFixed(2).replace('.', ',')}*%0A`;
-    mensagem += `━━━━━━━━━━━━━━━━━━%0A%0A`;
+    mensagem += `\n----------------------------------------\n`;
+    mensagem += `*TOTAL DO PEDIDO: R$ ${total.toFixed(2).replace('.', ',')}*\n`;
+    mensagem += `----------------------------------------\n\n`;
     
-    mensagem += `⚠️ *Aviso:* As carnes são vendidas por KG e podem sofrer variações de peso/preço. Ao final do pedido enviaremos uma mensagem com o valor exato.%0A%0A`;
+    mensagem += `⚠️ _Lembrando: As carnes sao vendidas por KG e podem sofrer variacoes de peso. O valor final sera confirmado no atendimento._\n\n`;
 
-    mensagem += `*💳 PAGAMENTO VIA PIX*%0A`;
-    mensagem += `Chave PIX: *${CHAVE_PIX}*%0A`;
-    mensagem += `Favorecido: Casa de Carne H&S%0A%0A`;
-    mensagem += `📸 *Após pagar, envie o comprovante nesta conversa para confirmarmos seu pedido!*%0A%0A`;
-    mensagem += `📍 Por favor, informe seu endereço de entrega:`;
+    mensagem += `*PAGAMENTO VIA PIX*\n`;
+    mensagem += `Chave PIX: *${CHAVE_PIX}*\n`;
+    mensagem += `Favorecido: Casa de Carne H&S\n\n`;
+    
+    mensagem += `📸 *Apos o pagamento, envie o comprovante nesta conversa para confirmarmos seu pedido!*\n\n`;
+    
+    mensagem += `📍 *Por favor, informe seu nome e endereco de entrega completo:*\n`;
 
-    const url = `https://wa.me/${WHATSAPP}?text=${mensagem}`;
+    // O segredo está no encodeURIComponent
+    const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
     window.open(url, '_blank');
 }
 
 // ============================================
-// TOAST (NOTIFICAÇÃO)
+// TOAST E INICIALIZAÇÃO
 // ============================================
 function mostrarToast(texto) {
     const toast = document.createElement('div');
     toast.style.cssText = `
         position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
         background: #25D366; color: #fff; padding: 12px 24px; border-radius: 30px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 2000; font-weight: 600;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: 600;
         font-size: 0.9rem; transition: transform 0.3s ease; white-space: nowrap;
     `;
     toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${texto}`;
@@ -441,13 +442,10 @@ function mostrarToast(texto) {
     }, 2500);
 }
 
-// ============================================
-// INICIALIZAÇÃO (DOM PRONTO)
-// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     carregarDados();
 
-    // Lógica do Carrossel
+    // Carrossel de Banners
     const carousel = document.getElementById('bannerCarousel');
     const dots = document.querySelectorAll('.banner-dots .dot');
     const items = document.querySelectorAll('.banner-item');
