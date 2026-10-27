@@ -100,7 +100,7 @@ body {
     width: 18px; 
     height: 18px; 
     border-radius: 50%; 
-    display: none; /* O JS vai mudar para flex */
+    display: none;
     align-items: center; 
     justify-content: center; 
     border: 2px solid #fff; 
@@ -243,7 +243,7 @@ body {
 .btn-corte { background: var(--cinza-claro); border: 1.5px solid var(--cinza-borda); color: var(--texto); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin: 0; }
 .btn-check:checked + .btn-corte { background: var(--vermelho); color: #fff; border-color: var(--vermelho); }
 
-/* CARRINHO LATERAL (Z-INDEX ACIMA DA BARRA INFERIOR) */
+/* CARRINHO LATERAL */
 .carrinho-lateral { position: fixed; top: 0; right: -100%; width: 100%; max-width: 400px; height: 100%; background: #fff; z-index: 3000; transition: 0.3s; display: flex; flex-direction: column; }
 .carrinho-lateral.ativo { right: 0; }
 .carrinho-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2999; opacity: 0; visibility: hidden; transition: 0.3s; }

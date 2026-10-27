@@ -245,7 +245,7 @@
         </div>
     </div>
 
-    <!-- ============ NOVO MODAL DE ENDEREÇO E PAGAMENTO ============ -->
+    <!-- MODAL DE ENDEREÇO E PAGAMENTO -->
     <div class="modal fade" id="modalEndereco" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content modal-add">
@@ -285,13 +285,23 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Forma de Pagamento *</label>
-                        <select class="form-select" id="cli-pagamento">
+                        <select class="form-select" id="cli-pagamento" onchange="window.verificarPagamento()">
                             <option value="">Selecione...</option>
                             <option value="PIX">PIX</option>
                             <option value="Cartão de Crédito">Cartão de Crédito</option>
                             <option value="Cartão de Débito">Cartão de Débito</option>
                             <option value="Dinheiro">Dinheiro</option>
                         </select>
+                    </div>
+
+                    <!-- CAMPO DE TROCO -->
+                    <div class="mb-3 d-none" id="wrapper-troco">
+                        <label class="form-label fw-bold small">Precisa de troco para quanto?</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="cli-troco" placeholder="Ex: 50" min="0" step="0.01">
+                        </div>
+                        <small class="text-muted" style="font-size: 0.7rem;">Deixe em branco se não precisar de troco.</small>
                     </div>
 
                     <div class="alert alert-warning small mb-0">

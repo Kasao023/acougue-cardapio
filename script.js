@@ -16,8 +16,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // ⚠️ CONFIGURAÇÕES DO CLIENTE (ALTERE AQUI ANTES DE SUBIR)
-const WHATSAPP = "5515998183052"; // Coloque o número com DDD e o 55 na frente
-const CHAVE_PIX = "00.000.000/0000-00"; // Coloque o CNPJ, CPF, e-mail ou telefone
+const WHATSAPP = "5515999999999"; 
+const CHAVE_PIX = "00.000.000/0000-00"; 
 
 let categorias = [];
 let produtos = [];
@@ -60,6 +60,21 @@ window.mudarAba = function(abaId, btn) {
     btn.classList.add('ativo');
     document.querySelectorAll('.aba-conteudo').forEach(c => c.classList.remove('ativo'));
     document.getElementById('aba-conteudo-' + abaId).classList.add('ativo');
+}
+
+// ============================================
+// VERIFICAR FORMA DE PAGAMENTO (TROCO)
+// ============================================
+window.verificarPagamento = function() {
+    const pagamento = document.getElementById('cli-pagamento').value;
+    const wrapperTroco = document.getElementById('wrapper-troco');
+    
+    if (pagamento === 'Dinheiro') {
+        wrapperTroco.classList.remove('d-none');
+    } else {
+        wrapperTroco.classList.add('d-none');
+        document.getElementById('cli-troco').value = '';
+    }
 }
 
 // ============================================
@@ -373,17 +388,15 @@ function carregarCarrinhoSalvo() {
 }
 
 // ============================================
-// ABRIR MODAL DE ENDEREÇO (NOVO)
+// ABRIR MODAL DE ENDEREÇO
 // ============================================
 window.abrirModalEndereco = function() {
     if (carrinho.length === 0) {
         alert('Seu carrinho está vazio!');
         return;
     }
-    // Fecha o carrinho lateral para não ficar por baixo
     window.fecharCarrinho();
     
-    // Tenta recuperar dados salvos do cliente no navegador
     const dadosSalvos = JSON.parse(localStorage.getItem('cliente_hs') || '{}');
     if (dadosSalvos.nome) document.getElementById('cli-nome').value = dadosSalvos.nome;
     if (dadosSalvos.rua) document.getElementById('cli-rua').value = dadosSalvos.rua;
@@ -391,11 +404,15 @@ window.abrirModalEndereco = function() {
     if (dadosSalvos.bairro) document.getElementById('cli-bairro').value = dadosSalvos.bairro;
     if (dadosSalvos.complemento) document.getElementById('cli-complemento').value = dadosSalvos.complemento;
 
+    // Reseta o campo de troco ao abrir
+    document.getElementById('wrapper-troco').classList.add('d-none');
+    document.getElementById('cli-troco').value = '';
+
     new bootstrap.Modal(document.getElementById('modalEndereco')).show();
 }
 
 // ============================================
-// ENVIAR PEDIDO WHATSAPP COM ENDEREÇO
+// ENVIAR PEDIDO WHATSAPP COM ENDEREÇO E TROCO
 // ============================================
 window.enviarPedidoWhatsApp = function() {
     const nome = document.getElementById('cli-nome').value.trim();
@@ -404,20 +421,27 @@ window.enviarPedidoWhatsApp = function() {
     const bairro = document.getElementById('cli-bairro').value.trim();
     const complemento = document.getElementById('cli-complemento').value.trim();
     const pagamento = document.getElementById('cli-pagamento').value;
+    const trocoInput = document.getElementById('cli-troco').value;
+    const troco = parseFloat(trocoInput) || 0;
 
-    // Validação
     if (!nome || !rua || !numero || !bairro || !pagamento) {
         alert('Por favor, preencha todos os campos obrigatórios (*) antes de enviar.');
         return;
     }
 
-    // Salva os dados no navegador para a próxima compra
+    if (pagamento === 'Dinheiro' && trocoInput && troco > 0) {
+        const totalCarrinho = carrinho.reduce((acc, item) => acc + item.subtotal, 0);
+        if (troco < totalCarrinho) {
+            alert(`O valor do troco (R$ ${troco.toFixed(2)}) é menor que o total do pedido (R$ ${totalCarrinho.toFixed(2)}).\nPor favor, corrija o valor ou deixe em branco.`);
+            return;
+        }
+    }
+
     const dadosCliente = { nome, rua, numero, bairro, complemento };
     localStorage.setItem('cliente_hs', JSON.stringify(dadosCliente));
 
     let total = 0;
     
-    // Monta a mensagem
     let mensagem = `*NOVO PEDIDO - CASA DE CARNE H&S*\n`;
     mensagem += `----------------------------------------\n\n`;
     mensagem += `*DADOS DO CLIENTE:*\n`;
@@ -426,6 +450,11 @@ window.enviarPedidoWhatsApp = function() {
     mensagem += `🏘️ Bairro: ${bairro}\n`;
     if (complemento) mensagem += `🏠 Complemento: ${complemento}\n`;
     mensagem += `💳 Pagamento: ${pagamento}\n`;
+    
+    if (pagamento === 'Dinheiro' && troco > 0) {
+        mensagem += `💵 Troco para: R$ ${troco.toFixed(2).replace('.', ',')}\n`;
+    }
+    
     mensagem += `\n----------------------------------------\n\n`;
     mensagem += `*ITENS DO PEDIDO:*\n`;
 
@@ -455,10 +484,7 @@ window.enviarPedidoWhatsApp = function() {
         mensagem += `📸 *Após o pagamento, envie o comprovante nesta conversa para confirmarmos seu pedido!*\n`;
     }
 
-    // Fecha o modal antes de abrir o WhatsApp
     bootstrap.Modal.getInstance(document.getElementById('modalEndereco')).hide();
-
-    // Codifica e envia
     const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
     window.open(url, '_blank');
 }
@@ -486,7 +512,6 @@ function mostrarToast(texto) {
 document.addEventListener('DOMContentLoaded', function() {
     carregarDados();
 
-    // Carrossel de Banners
     const carousel = document.getElementById('bannerCarousel');
     const dots = document.querySelectorAll('.banner-dots .dot');
     const items = document.querySelectorAll('.banner-item');
