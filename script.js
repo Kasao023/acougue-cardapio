@@ -16,7 +16,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // ⚠️ CONFIGURAÇÕES DO CLIENTE (ALTERE AQUI ANTES DE SUBIR)
-const WHATSAPP = "5515999999999"; 
+const WHATSAPP = "5515998183052"; 
 const CHAVE_PIX = "00.000.000/0000-00"; 
 
 let categorias = [];
