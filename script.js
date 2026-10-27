@@ -16,7 +16,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // ⚠️ CONFIGURAÇÕES DO CLIENTE (ALTERE AQUI ANTES DE SUBIR)
-const WHATSAPP = "5515999999999"; // Coloque o número com DDD e o 55 na frente
+const WHATSAPP = "5515998183052"; // Coloque o número com DDD e o 55 na frente
 const CHAVE_PIX = "00.000.000/0000-00"; // Coloque o CNPJ, CPF, e-mail ou telefone
 
 let categorias = [];
