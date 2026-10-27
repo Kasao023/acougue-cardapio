@@ -16,10 +16,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // ⚠️ CONFIGURAÇÕES DO CLIENTE (ALTERE AQUI ANTES DE SUBIR)
-// Coloque o número com DDD e o 55 na frente. Ex: 5515998183052
-const WHATSAPP = "5515998183052"; 
-// Coloque o CNPJ, CPF, e-mail ou telefone (com 55)
-const CHAVE_PIX = "00.000.000/0000-00"; 
+const WHATSAPP = "5515999999999"; // Coloque o número com DDD e o 55 na frente
+const CHAVE_PIX = "00.000.000/0000-00"; // Coloque o CNPJ, CPF, e-mail ou telefone
 
 let categorias = [];
 let produtos = [];
@@ -375,19 +373,60 @@ function carregarCarrinhoSalvo() {
 }
 
 // ============================================
-// FINALIZAR PEDIDO (VERSÃO CORRIGIDA PARA O WHATSAPP)
+// ABRIR MODAL DE ENDEREÇO (NOVO)
 // ============================================
-window.finalizarPedido = function() {
-    if (carrinho.length === 0) { 
-        alert('Seu carrinho está vazio! Adicione produtos para fazer o pedido.'); 
-        return; 
+window.abrirModalEndereco = function() {
+    if (carrinho.length === 0) {
+        alert('Seu carrinho está vazio!');
+        return;
     }
+    // Fecha o carrinho lateral para não ficar por baixo
+    window.fecharCarrinho();
+    
+    // Tenta recuperar dados salvos do cliente no navegador
+    const dadosSalvos = JSON.parse(localStorage.getItem('cliente_hs') || '{}');
+    if (dadosSalvos.nome) document.getElementById('cli-nome').value = dadosSalvos.nome;
+    if (dadosSalvos.rua) document.getElementById('cli-rua').value = dadosSalvos.rua;
+    if (dadosSalvos.numero) document.getElementById('cli-numero').value = dadosSalvos.numero;
+    if (dadosSalvos.bairro) document.getElementById('cli-bairro').value = dadosSalvos.bairro;
+    if (dadosSalvos.complemento) document.getElementById('cli-complemento').value = dadosSalvos.complemento;
+
+    new bootstrap.Modal(document.getElementById('modalEndereco')).show();
+}
+
+// ============================================
+// ENVIAR PEDIDO WHATSAPP COM ENDEREÇO
+// ============================================
+window.enviarPedidoWhatsApp = function() {
+    const nome = document.getElementById('cli-nome').value.trim();
+    const rua = document.getElementById('cli-rua').value.trim();
+    const numero = document.getElementById('cli-numero').value.trim();
+    const bairro = document.getElementById('cli-bairro').value.trim();
+    const complemento = document.getElementById('cli-complemento').value.trim();
+    const pagamento = document.getElementById('cli-pagamento').value;
+
+    // Validação
+    if (!nome || !rua || !numero || !bairro || !pagamento) {
+        alert('Por favor, preencha todos os campos obrigatórios (*) antes de enviar.');
+        return;
+    }
+
+    // Salva os dados no navegador para a próxima compra
+    const dadosCliente = { nome, rua, numero, bairro, complemento };
+    localStorage.setItem('cliente_hs', JSON.stringify(dadosCliente));
 
     let total = 0;
     
-    // Usando quebra de linha \n e texto limpo para o WhatsApp não bugar
+    // Monta a mensagem
     let mensagem = `*NOVO PEDIDO - CASA DE CARNE H&S*\n`;
     mensagem += `----------------------------------------\n\n`;
+    mensagem += `*DADOS DO CLIENTE:*\n`;
+    mensagem += `👤 Nome: ${nome}\n`;
+    mensagem += `📍 Endereço: ${rua}, ${numero}\n`;
+    mensagem += `🏘️ Bairro: ${bairro}\n`;
+    if (complemento) mensagem += `🏠 Complemento: ${complemento}\n`;
+    mensagem += `💳 Pagamento: ${pagamento}\n`;
+    mensagem += `\n----------------------------------------\n\n`;
     mensagem += `*ITENS DO PEDIDO:*\n`;
 
     carrinho.forEach(item => {
@@ -395,29 +434,31 @@ window.finalizarPedido = function() {
         const subtotalFmt = item.subtotal.toFixed(2).replace('.', ',');
 
         mensagem += `\n- *${item.nome}*\n`;
-        mensagem += `  Qtd: ${item.quantidadeExibir}\n`;
+        mensagem += `  📦 Qtd: ${item.quantidadeExibir}\n`;
         
-        if (item.tipoCorte) mensagem += `  Corte: ${item.tipoCorte}\n`;
-        if (item.observacao) mensagem += `  Obs: ${item.observacao}\n`;
+        if (item.tipoCorte) mensagem += `  ✂️ Corte: ${item.tipoCorte}\n`;
+        if (item.observacao) mensagem += `  📝 Obs: ${item.observacao}\n`;
         
-        mensagem += `  Subtotal: R$ ${subtotalFmt}\n`;
+        mensagem += `  💵 Subtotal: R$ ${subtotalFmt}\n`;
     });
 
     mensagem += `\n----------------------------------------\n`;
     mensagem += `*TOTAL DO PEDIDO: R$ ${total.toFixed(2).replace('.', ',')}*\n`;
     mensagem += `----------------------------------------\n\n`;
     
-    mensagem += `⚠️ _Lembrando: As carnes sao vendidas por KG e podem sofrer variacoes de peso. O valor final sera confirmado no atendimento._\n\n`;
+    mensagem += `⚠️ _Lembrando: As carnes são vendidas por KG e podem sofrer variações de peso. O valor final será confirmado no atendimento._\n\n`;
 
-    mensagem += `*PAGAMENTO VIA PIX*\n`;
-    mensagem += `Chave PIX: *${CHAVE_PIX}*\n`;
-    mensagem += `Favorecido: Casa de Carne H&S\n\n`;
-    
-    mensagem += `📸 *Apos o pagamento, envie o comprovante nesta conversa para confirmarmos seu pedido!*\n\n`;
-    
-    mensagem += `📍 *Por favor, informe seu nome e endereco de entrega completo:*\n`;
+    if (pagamento === 'PIX') {
+        mensagem += `*PAGAMENTO VIA PIX*\n`;
+        mensagem += `Chave PIX: *${CHAVE_PIX}*\n`;
+        mensagem += `Favorecido: Casa de Carne H&S\n\n`;
+        mensagem += `📸 *Após o pagamento, envie o comprovante nesta conversa para confirmarmos seu pedido!*\n`;
+    }
 
-    // O segredo está no encodeURIComponent
+    // Fecha o modal antes de abrir o WhatsApp
+    bootstrap.Modal.getInstance(document.getElementById('modalEndereco')).hide();
+
+    // Codifica e envia
     const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
     window.open(url, '_blank');
 }

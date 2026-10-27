@@ -41,18 +41,15 @@
     <!-- ============ APP PRINCIPAL (CARDÁPIO) ============ -->
     <div id="app-principal" class="app-escondido">
         
-        <!-- 1. TOPO COM CARRINHO -->
         <div class="header-carrinho">
             <button class="btn-voltar-header" onclick="window.voltarParaHome()"><i class="bi bi-arrow-left"></i></button>
             <h1 class="logo">Cardápio</h1>
             <button class="btn-carrinho-header" onclick="window.abrirCarrinho()">
                 <i class="bi bi-bag"></i>
-                <!-- O CONTADOR DO CARRINHO ESTÁ AQUI -->
                 <span class="badge-carrinho" id="badge-carrinho">0</span>
             </button>
         </div>
 
-        <!-- 2. TOPO DA LOJA (LOGO, NOME E ESTRELAS) -->
         <div class="topo-loja text-center">
             <img src="casadecarnehs.png" alt="Logo H&S" class="topo-logo">
             <h2 class="topo-nome">Casa de Carne H&S <i class="bi bi-chevron-right fs-5 text-muted"></i></h2>
@@ -66,7 +63,6 @@
             </div>
         </div>
 
-        <!-- 3. BARRA DE PESQUISA -->
         <div class="container mt-3">
             <div class="busca-wrapper">
                 <i class="bi bi-search"></i>
@@ -74,7 +70,6 @@
             </div>
         </div>
 
-        <!-- 4. BANNER CARROSSEL -->
         <div class="banner-scroll-container mt-3">
             <div class="banner-scroll" id="bannerCarousel">
                 <div class="banner-item">
@@ -90,14 +85,12 @@
             </div>
         </div>
 
-        <!-- 5. CATEGORIAS -->
         <nav class="categorias-nav mt-3">
             <div class="container">
                 <div class="categorias-scroll" id="categorias-scroll"></div>
             </div>
         </nav>
 
-        <!-- 6. PRODUTOS -->
         <main class="container my-4 main-content">
             <div id="loading" class="text-center py-5">
                 <div class="spinner-border text-danger" role="status"></div>
@@ -252,6 +245,69 @@
         </div>
     </div>
 
+    <!-- ============ NOVO MODAL DE ENDEREÇO E PAGAMENTO ============ -->
+    <div class="modal fade" id="modalEndereco" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content modal-add">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-geo-alt-fill text-danger"></i> Dados para Entrega</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Preencha seus dados para finalizar o pedido.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Nome Completo *</label>
+                        <input type="text" class="form-control" id="cli-nome" placeholder="Ex: João da Silva">
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-8">
+                            <label class="form-label fw-bold small">Rua / Avenida *</label>
+                            <input type="text" class="form-control" id="cli-rua" placeholder="Ex: Rua das Flores">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-bold small">Número *</label>
+                            <input type="text" class="form-control" id="cli-numero" placeholder="Ex: 123">
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-7">
+                            <label class="form-label fw-bold small">Bairro *</label>
+                            <input type="text" class="form-control" id="cli-bairro" placeholder="Ex: Centro">
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label fw-bold small">Complemento</label>
+                            <input type="text" class="form-control" id="cli-complemento" placeholder="Apto, bloco...">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Forma de Pagamento *</label>
+                        <select class="form-select" id="cli-pagamento">
+                            <option value="">Selecione...</option>
+                            <option value="PIX">PIX</option>
+                            <option value="Cartão de Crédito">Cartão de Crédito</option>
+                            <option value="Cartão de Débito">Cartão de Débito</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-warning small mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Confira os dados antes de enviar. O pedido será enviado pelo WhatsApp.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light flex-fill" data-bs-dismiss="modal">Voltar</button>
+                    <button type="button" class="btn btn-success fw-bold flex-fill" onclick="window.enviarPedidoWhatsApp()">
+                        <i class="bi bi-whatsapp"></i> Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- CARRINHO LATERAL -->
     <div class="carrinho-overlay" id="carrinho-overlay" onclick="window.fecharCarrinho()"></div>
     <aside class="carrinho-lateral" id="carrinho-lateral">
@@ -267,8 +323,8 @@
                     <strong id="carrinho-total">R$ 0,00</strong>
                 </div>
             </div>
-            <button class="btn-finalizar" onclick="window.finalizarPedido()">
-                <i class="bi bi-whatsapp"></i> Finalizar no WhatsApp
+            <button class="btn-finalizar" onclick="window.abrirModalEndereco()">
+                <i class="bi bi-whatsapp"></i> Finalizar Pedido
             </button>
         </div>
     </aside>
