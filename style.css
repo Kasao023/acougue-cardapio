@@ -157,8 +157,11 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
 
-/* ============ BANNER ============ */
-.banner-scroll-container { overflow: hidden; padding-left: 15px; }
+/* ============ BANNER CORRIGIDO (IMAGEM INTEIRA) ============ */
+.banner-scroll-container { 
+    overflow: hidden; 
+    padding-left: 15px; 
+}
 .banner-scroll {
     display: flex;
     gap: 15px;
@@ -167,6 +170,7 @@ body {
     scrollbar-width: none; 
     padding-right: 15px;
     scroll-behavior: smooth;
+    align-items: center;
 }
 .banner-scroll::-webkit-scrollbar { display: none; }
 
@@ -174,15 +178,18 @@ body {
     flex: 0 0 90%; 
     scroll-snap-align: start;
     border-radius: 12px;
-    height: 120px; 
+    display: flex;
+    justify-content: center;
+    background: #f9f9f9;
 }
 
 .banner-item img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto; /* Ajusta a altura conforme a largura */
+    object-fit: contain; /* Garante que a imagem apareça inteira */
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    display: block;
 }
 
 .banner-dots {
