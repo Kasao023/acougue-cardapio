@@ -17,7 +17,7 @@ const db = firebase.database();
 
 // ⚠️ CONFIGURAÇÕES DO CLIENTE (ALTERE AQUI ANTES DE SUBIR)
 const WHATSAPP = "5515998027793"; 
-const CHAVE_PIX = "Aqui fica a sua chave que vc vai me passar depoois"; 
+// A chave PIX não é mais enviada no automático.
 
 let categorias = [];
 let produtos = [];
@@ -404,7 +404,6 @@ window.abrirModalEndereco = function() {
     if (dadosSalvos.bairro) document.getElementById('cli-bairro').value = dadosSalvos.bairro;
     if (dadosSalvos.complemento) document.getElementById('cli-complemento').value = dadosSalvos.complemento;
 
-    // Reseta o campo de troco ao abrir
     document.getElementById('wrapper-troco').classList.add('d-none');
     document.getElementById('cli-troco').value = '';
 
@@ -412,7 +411,7 @@ window.abrirModalEndereco = function() {
 }
 
 // ============================================
-// ENVIAR PEDIDO WHATSAPP COM ENDEREÇO E TROCO
+// ENVIAR PEDIDO WHATSAPP (MENSAGEM NOVA)
 // ============================================
 window.enviarPedidoWhatsApp = function() {
     const nome = document.getElementById('cli-nome').value.trim();
@@ -432,7 +431,7 @@ window.enviarPedidoWhatsApp = function() {
     if (pagamento === 'Dinheiro' && trocoInput && troco > 0) {
         const totalCarrinho = carrinho.reduce((acc, item) => acc + item.subtotal, 0);
         if (troco < totalCarrinho) {
-            alert(`O valor do troco (R$ ${troco.toFixed(2)}) é menor que o total do pedido (R$ ${totalCarrinho.toFixed(2)}).\nPor favor, corrija o valor ou deixe em branco.`);
+            alert(`O valor do troco (R$ ${troco.toFixed(2)}) é menor que o total estimado do pedido (R$ ${totalCarrinho.toFixed(2)}).\nPor favor, corrija o valor.`);
             return;
         }
     }
@@ -442,6 +441,7 @@ window.enviarPedidoWhatsApp = function() {
 
     let total = 0;
     
+    // MENSAGEM NOVA E PROFISSIONAL
     let mensagem = `*NOVO PEDIDO - CASA DE CARNE H&S*\n`;
     mensagem += `----------------------------------------\n\n`;
     mensagem += `*DADOS DO CLIENTE:*\n`;
@@ -472,17 +472,15 @@ window.enviarPedidoWhatsApp = function() {
     });
 
     mensagem += `\n----------------------------------------\n`;
-    mensagem += `*TOTAL DO PEDIDO: R$ ${total.toFixed(2).replace('.', ',')}*\n`;
+    mensagem += `*VALOR ESTIMADO: R$ ${total.toFixed(2).replace('.', ',')}*\n`;
     mensagem += `----------------------------------------\n\n`;
     
-    mensagem += `⚠️ _Lembrando: As carnes são vendidas por KG e podem sofrer variações de peso. O valor final será confirmado no atendimento._\n\n`;
-
-    if (pagamento === 'PIX') {
-        mensagem += `*PAGAMENTO VIA PIX*\n`;
-        mensagem += `Chave PIX: *${CHAVE_PIX}*\n`;
-        mensagem += `Favorecido: Casa de Carne H&S\n\n`;
-        mensagem += `📸 *Após o pagamento, envie o comprovante nesta conversa para confirmarmos seu pedido!*\n`;
-    }
+    // AVISO CLARO E PROFISSIONAL
+    mensagem += `⚠️ *ATENÇÃO: NÃO REALIZE O PAGAMENTO AINDA!*\n\n`;
+    mensagem += `Como as carnes são vendidas por KG, o valor acima é apenas uma *estimativa*.\n\n`;
+    mensagem += `🥩 *Iremos pesar os produtos e enviar o valor final e a Chave PIX nesta conversa.*\n\n`;
+    mensagem += `Por favor, *aguarde a nossa confirmação* para realizar o pagamento. Evitando assim a necessidade de pagamentos adicionais ou reembolsos.\n\n`;
+    mensagem += `Obrigado pela preferência! 😊`;
 
     bootstrap.Modal.getInstance(document.getElementById('modalEndereco')).hide();
     const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
