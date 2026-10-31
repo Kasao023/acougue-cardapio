@@ -156,15 +156,40 @@
         let produtosGlobais = [];
         let filtroAtual = 'todos';
 
+        // Categorias extras que sempre existirão (criadas automaticamente)
+        const CATEGORIAS_FIXAS = [
+            { id: 'kitSemana', nome: 'Kits da Semana' },
+            { id: 'kitChurrasco', nome: 'Kits Churrasco' },
+            { id: 'assadosDomingos', nome: 'Assados e Domingos' }
+        ];
+
         function verificarSenha() {
             const senha = document.getElementById('senha-admin').value;
             if (senha === SENHA_ADMIN) {
                 document.getElementById('tela-login').classList.add('d-none');
                 document.getElementById('painel-admin').classList.remove('d-none');
-                carregarDadosAdmin();
+                inicializarCategoriasEGarregar();
             } else {
                 document.getElementById('erro-senha').classList.remove('d-none');
             }
+        }
+
+        // Garante que as 3 categorias existam no Firebase antes de carregar tudo
+        function inicializarCategoriasEGarregar() {
+            const promises = CATEGORIAS_FIXAS.map(cat => {
+                return db.ref('Category/' + cat.id).once('value').then(snap => {
+                    if (!snap.exists()) {
+                        return db.ref('Category/' + cat.id).set({ name: cat.nome });
+                    }
+                });
+            });
+
+            Promise.all(promises)
+                .then(() => carregarDadosAdmin())
+                .catch(err => {
+                    console.error("Erro ao criar categorias:", err);
+                    carregarDadosAdmin();
+                });
         }
 
         function carregarDadosAdmin() {
@@ -177,7 +202,9 @@
                 categoriasGlobais.sort((a, b) => a.nome.localeCompare(b.nome));
 
                 let selectHtml = '';
-                categoriasGlobais.forEach(c => { selectHtml += `<option value="${c.id}">${c.nome}</option>`; });
+                categoriasGlobais.forEach(c => { 
+                    selectHtml += `<option value="${c.id}">${c.nome}</option>`; 
+                });
                 document.getElementById('edit-categoria').innerHTML = selectHtml;
 
                 renderizarFiltros();

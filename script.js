@@ -15,18 +15,14 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ⚠️ CONFIGURAÇÕES DO CLIENTE (ALTERE AQUI ANTES DE SUBIR)
-const WHATSAPP = "5515998027793"; 
-// A chave PIX não é mais enviada no automático.
+const WHATSAPP = "5515998027793";
 
 let categorias = [];
 let produtos = [];
 let carrinho = [];
 let produtoAtual = null;
 
-// ============================================
 // NAVEGAÇÃO DE TELAS
-// ============================================
 window.entrarNaLoja = function() {
     const telaHome = document.getElementById('tela-home');
     const appPrincipal = document.getElementById('app-principal');
@@ -46,9 +42,7 @@ window.voltarParaHome = function() {
     setTimeout(() => { telaHome.style.opacity = '1'; }, 50);
 }
 
-// ============================================
 // MODAL SOBRE NÓS
-// ============================================
 window.abrirSobreNos = function() {
     document.getElementById('modalSobre').classList.add('show');
 }
@@ -62,13 +56,10 @@ window.mudarAba = function(abaId, btn) {
     document.getElementById('aba-conteudo-' + abaId).classList.add('ativo');
 }
 
-// ============================================
 // VERIFICAR FORMA DE PAGAMENTO (TROCO)
-// ============================================
 window.verificarPagamento = function() {
     const pagamento = document.getElementById('cli-pagamento').value;
     const wrapperTroco = document.getElementById('wrapper-troco');
-    
     if (pagamento === 'Dinheiro') {
         wrapperTroco.classList.remove('d-none');
     } else {
@@ -77,62 +68,60 @@ window.verificarPagamento = function() {
     }
 }
 
-// ============================================
 // CARREGAR DADOS DO FIREBASE
-// ============================================
 function carregarDados() {
-    db.ref('Category').once('value')
-        .then(snapCat => {
-            categorias = [];
-            snapCat.forEach(c => {
-                categorias.push({ id: c.key, nome: c.val().name || 'Sem nome' });
-            });
-            categorias.sort((a, b) => a.id.localeCompare(b.id));
-            renderizarNavCategorias();
-            return db.ref('Foods').once('value');
-        })
-        .then(snapProd => {
-            produtos = [];
-            snapProd.forEach(p => {
-                const val = p.val();
-                if (val.name && val.menuId) {
-                    const parsed = parsePreco(val.price || '');
-                    produtos.push({
-                        id: p.key,
-                        nome: val.name,
-                        precoNumerico: parsed.valor,
-                        unidade: parsed.unidade,
-                        imagem: val.image || '',
-                        menuId: val.menuId,
-                        disponivel: val.disponivel !== false
-                    });
-                }
-            });
-            renderizarProdutos();
-            document.getElementById('loading').style.display = 'none';
-            carregarCarrinhoSalvo();
-        })
-        .catch(err => {
-            console.error('Erro:', err);
-            document.getElementById('loading').innerHTML = '<div class="alert alert-danger">Erro ao carregar produtos.</div>';
+    Promise.all([
+        db.ref('Category').once('value'),
+        db.ref('Foods').once('value')
+    ]).then(([snapCat, snapProd]) => {
+        categorias = [];
+        produtos = [];
+
+        snapCat.forEach(c => {
+            categorias.push({ id: c.key, nome: c.val().name });
         });
+        categorias.sort((a, b) => a.nome.localeCompare(b.nome));
+        renderizarNavCategorias();
+
+        snapProd.forEach(p => {
+            const val = p.val();
+            if (val.name && val.menuId) {
+                const parsed = parsePreco(val.price || '');
+                produtos.push({
+                    id: p.key,
+                    nome: val.name,
+                    precoNumerico: parsed.valor,
+                    unidade: parsed.unidade,
+                    imagem: val.image || '',
+                    menuId: val.menuId,
+                    disponivel: val.disponivel !== false
+                });
+            }
+        });
+
+        renderizarProdutos();
+        document.getElementById('loading').style.display = 'none';
+        carregarCarrinhoSalvo();
+    }).catch(err => {
+        console.error('Erro:', err);
+        document.getElementById('loading').innerHTML = '<div class="alert alert-danger">Erro ao carregar produtos.</div>';
+    });
 }
 
 function parsePreco(precoStr) {
-    if (!precoStr || precoStr.trim() === '') return { valor: 0, unidade: 'kg' };
+    if (!precoStr || String(precoStr).trim() === '') return { valor: 0, unidade: 'un' };
     let str = String(precoStr).replace(/\$/g, '').trim();
-    let unidade = 'kg';
-    if (/\bun\b/i.test(str) || /unidade/i.test(str)) unidade = 'un';
-    else if (/\bkg\b/i.test(str)) unidade = 'kg';
+    let unidade = 'un';
+    if (/\bkg\b/i.test(str)) unidade = 'kg';
+    else if (/\bun\b/i.test(str) || /unidade/i.test(str)) unidade = 'un';
+    
     let nums = str.replace(/[^\d,.]/g, '').trim().replace(',', '.');
     let valor = parseFloat(nums);
     if (isNaN(valor)) valor = 0;
     return { valor, unidade };
 }
 
-// ============================================
 // RENDERIZAR PRODUTOS
-// ============================================
 function renderizarNavCategorias() {
     const container = document.getElementById('categorias-scroll');
     if (!container) return;
@@ -200,9 +189,7 @@ window.filtrarProdutos = function() {
     renderizarProdutos(document.getElementById('busca').value);
 }
 
-// ============================================
 // MODAL DE ADIÇÃO
-// ============================================
 window.abrirModalPeso = function(produtoId) {
     const prod = produtos.find(p => p.id === produtoId);
     if (!prod) return;
@@ -215,15 +202,18 @@ window.abrirModalPeso = function(produtoId) {
     const wrapperUnidade = document.getElementById('modal-unidade-wrapper');
     const labelQtd = document.getElementById('modal-qtd-label');
     const opcoesCorte = document.getElementById('opcoes-corte-wrapper');
+    const qtdRapida = document.getElementById('qtd-rapida-wrapper');
 
     if (prod.unidade === 'un') {
         wrapperUnidade.style.display = 'none';
         opcoesCorte.style.display = 'none';
+        if (qtdRapida) qtdRapida.style.display = 'none';
         labelQtd.textContent = 'Quantidade (unidades)';
         document.getElementById('modal-quantidade').placeholder = 'Ex: 2';
     } else {
         wrapperUnidade.style.display = 'block';
         opcoesCorte.style.display = 'block';
+        if (qtdRapida) qtdRapida.style.display = 'flex';
         labelQtd.textContent = 'Quantidade (g)';
         document.getElementById('modal-quantidade').placeholder = 'Ex: 500';
         document.getElementById('unidade-g').checked = true;
@@ -252,7 +242,7 @@ window.atualizarCalculo = function() {
     const labelQtd = document.getElementById('modal-qtd-label');
     const unidade = produtoAtual.unidade === 'un' ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
 
-    if (produtoAtual.unidade !== 'un') {
+        if (produtoAtual.unidade !== 'un') {
         labelQtd.textContent = unidade === 'g' ? 'Quantidade (g)' : 'Quantidade (kg)';
     }
 
@@ -303,9 +293,7 @@ window.confirmarAdicao = function() {
     mostrarToast(`${produtoAtual.nome} adicionado!`);
 }
 
-// ============================================
 // CARRINHO
-// ============================================
 function atualizarCarrinho() {
     const badge = document.getElementById('badge-carrinho');
     if (badge) {
@@ -332,7 +320,6 @@ function atualizarCarrinho() {
 
     carrinho.forEach((item, index) => {
         total += item.subtotal;
-        
         let detalhesExtras = '';
         if (item.tipoCorte) detalhesExtras += `<div class="item-obs"><strong>Corte:</strong> ${item.tipoCorte}</div>`;
         if (item.observacao) detalhesExtras += `<div class="item-obs"><strong>Obs:</strong> ${item.observacao}</div>`;
@@ -387,16 +374,14 @@ function carregarCarrinhoSalvo() {
     } catch (e) { carrinho = []; }
 }
 
-// ============================================
-// ABRIR MODAL DE ENDEREÇO
-// ============================================
+// MODAL DE ENDEREÇO
 window.abrirModalEndereco = function() {
     if (carrinho.length === 0) {
         alert('Seu carrinho está vazio!');
         return;
     }
     window.fecharCarrinho();
-    
+
     const dadosSalvos = JSON.parse(localStorage.getItem('cliente_hs') || '{}');
     if (dadosSalvos.nome) document.getElementById('cli-nome').value = dadosSalvos.nome;
     if (dadosSalvos.rua) document.getElementById('cli-rua').value = dadosSalvos.rua;
@@ -410,9 +395,7 @@ window.abrirModalEndereco = function() {
     new bootstrap.Modal(document.getElementById('modalEndereco')).show();
 }
 
-// ============================================
-// ENVIAR PEDIDO WHATSAPP (MENSAGEM NOVA)
-// ============================================
+// ENVIAR PEDIDO WHATSAPP
 window.enviarPedidoWhatsApp = function() {
     const nome = document.getElementById('cli-nome').value.trim();
     const rua = document.getElementById('cli-rua').value.trim();
@@ -440,8 +423,6 @@ window.enviarPedidoWhatsApp = function() {
     localStorage.setItem('cliente_hs', JSON.stringify(dadosCliente));
 
     let total = 0;
-    
-    // MENSAGEM NOVA E PROFISSIONAL
     let mensagem = `*NOVO PEDIDO - CASA DE CARNE H&S*\n`;
     mensagem += `----------------------------------------\n\n`;
     mensagem += `*DADOS DO CLIENTE:*\n`;
@@ -450,32 +431,25 @@ window.enviarPedidoWhatsApp = function() {
     mensagem += `🏘️ Bairro: ${bairro}\n`;
     if (complemento) mensagem += `🏠 Complemento: ${complemento}\n`;
     mensagem += `💳 Pagamento: ${pagamento}\n`;
-    
     if (pagamento === 'Dinheiro' && troco > 0) {
         mensagem += `💵 Troco para: R$ ${troco.toFixed(2).replace('.', ',')}\n`;
     }
-    
     mensagem += `\n----------------------------------------\n\n`;
     mensagem += `*ITENS DO PEDIDO:*\n`;
 
     carrinho.forEach(item => {
         total += item.subtotal;
         const subtotalFmt = item.subtotal.toFixed(2).replace('.', ',');
-
         mensagem += `\n- *${item.nome}*\n`;
         mensagem += `  📦 Qtd: ${item.quantidadeExibir}\n`;
-        
         if (item.tipoCorte) mensagem += `  ✂️ Corte: ${item.tipoCorte}\n`;
         if (item.observacao) mensagem += `  📝 Obs: ${item.observacao}\n`;
-        
         mensagem += `  💵 Subtotal: R$ ${subtotalFmt}\n`;
     });
 
     mensagem += `\n----------------------------------------\n`;
     mensagem += `*VALOR ESTIMADO: R$ ${total.toFixed(2).replace('.', ',')}*\n`;
     mensagem += `----------------------------------------\n\n`;
-    
-    // AVISO CLARO E PROFISSIONAL
     mensagem += `⚠️ *ATENÇÃO: NÃO REALIZE O PAGAMENTO AINDA!*\n\n`;
     mensagem += `Como as carnes são vendidas por KG, o valor acima é apenas uma *estimativa*.\n\n`;
     mensagem += `🥩 *Iremos pesar os produtos e enviar o valor final e a Chave PIX nesta conversa.*\n\n`;
@@ -487,9 +461,7 @@ window.enviarPedidoWhatsApp = function() {
     window.open(url, '_blank');
 }
 
-// ============================================
 // TOAST E INICIALIZAÇÃO
-// ============================================
 function mostrarToast(texto) {
     const toast = document.createElement('div');
     toast.style.cssText = `
@@ -513,13 +485,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const carousel = document.getElementById('bannerCarousel');
     const dots = document.querySelectorAll('.banner-dots .dot');
     const items = document.querySelectorAll('.banner-item');
-    
+
     if (carousel && items.length > 0) {
         let currentIndex = 0;
         let autoScrollInterval;
 
         function scrollToIndex(index) {
-            const itemWidth = items[0].offsetWidth + 15; 
+            const itemWidth = items[0].offsetWidth + 15;
             carousel.scrollTo({ left: index * itemWidth, behavior: 'smooth' });
             updateDots(index);
         }
