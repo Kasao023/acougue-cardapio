@@ -80,7 +80,16 @@ function carregarDados() {
         snapCat.forEach(c => {
             categorias.push({ id: c.key, nome: c.val().name });
         });
-        categorias.sort((a, b) => a.nome.localeCompare(b.nome));
+        categorias.sort((a, b) => {
+    const ordemFixa = ['Bovino', 'Suíno', 'Aves', 'Kits da Semana', 'Kits Churrasco', 'Assados e Domingos'];
+    const posA = ordemFixa.indexOf(a.nome);
+    const posB = ordemFixa.indexOf(b.nome);
+    // Se algum não estiver na lista, joga pro final em ordem alfabética
+    const finalA = posA === -1 ? 999 : posA;
+    const finalB = posB === -1 ? 999 : posB;
+    if (finalA !== finalB) return finalA - finalB;
+    return a.nome.localeCompare(b.nome);
+});
         renderizarNavCategorias();
 
         snapProd.forEach(p => {
