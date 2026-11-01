@@ -29,6 +29,7 @@
 
         .admin-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid var(--vermelho); display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .admin-card.esgotado { opacity: 0.7; border-left-color: #999; }
+        .admin-card.tipo-kit { border-left-color: #0d6efd; }
         .admin-card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
         .admin-card img.grayscale { filter: grayscale(1); }
         
@@ -42,6 +43,7 @@
         
         .d-none { display: none !important; }
         .badge-esgotado { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; }
+        .badge-kit { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; background: #0d6efd; color: white; }
     </style>
 </head>
 <body>
@@ -88,6 +90,7 @@
         </div>
     </div>
 
+    <!-- MODAL EDITAR/CRIAR -->
     <div class="modal fade" id="modalEditar" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="border-radius: 15px; border: none;">
@@ -97,6 +100,7 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="edit-id">
+                    <input type="hidden" id="edit-tabela"> 
                     <input type="hidden" id="edit-imagem-base64"> 
                     
                     <div class="mb-3">
@@ -105,7 +109,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-bold small">Preço (Ex: 41,99 kg ou 3,99 un)</label>
+                        <label class="form-label fw-bold small">Preço (Ex: 41,99 kg ou 150,00 un)</label>
                         <input type="text" id="edit-preco" class="form-control">
                     </div>
 
@@ -156,76 +160,87 @@
         let produtosGlobais = [];
         let filtroAtual = 'todos';
 
-        // Categorias extras que sempre existirão (criadas automaticamente)
-        const CATEGORIAS_FIXAS = [
-            { id: 'kitSemana', nome: 'Kits da Semana' },
-            { id: 'kitChurrasco', nome: 'Kits Churrasco' },
-            { id: 'assadosDomingos', nome: 'Assados e Domingos' }
-        ];
-
         function verificarSenha() {
             const senha = document.getElementById('senha-admin').value;
             if (senha === SENHA_ADMIN) {
                 document.getElementById('tela-login').classList.add('d-none');
                 document.getElementById('painel-admin').classList.remove('d-none');
-                inicializarCategoriasEGarregar();
+                carregarDadosAdmin();
             } else {
                 document.getElementById('erro-senha').classList.remove('d-none');
             }
         }
 
-        // Garante que as 3 categorias existam no Firebase antes de carregar tudo
-        function inicializarCategoriasEGarregar() {
-            const promises = CATEGORIAS_FIXAS.map(cat => {
-                return db.ref('Category/' + cat.id).once('value').then(snap => {
-                    if (!snap.exists()) {
-                        return db.ref('Category/' + cat.id).set({ name: cat.nome });
-                    }
-                });
-            });
-
-            Promise.all(promises)
-                .then(() => carregarDadosAdmin())
-                .catch(err => {
-                    console.error("Erro ao criar categorias:", err);
-                    carregarDadosAdmin();
-                });
-        }
-
         function carregarDadosAdmin() {
-            db.ref('Category').once('value').then(snap => {
+            // LÊ APENAS A TABELA 'Category' PARA AS CATEGORIAS
+            db.ref('Category').once('value').then(snapCat => {
                 categoriasGlobais = [];
-                snap.forEach(c => {
-                    const val = c.val();
-                    if (val && val.name) categoriasGlobais.push({ id: c.key, nome: val.name });
-                });
+                if (snapCat.exists()) {
+                    snapCat.forEach(c => {
+                        const val = c.val();
+                        if (val && val.name) {
+                            categoriasGlobais.push({ id: c.key, nome: val.name });
+                        }
+                    });
+                }
+                
                 categoriasGlobais.sort((a, b) => a.nome.localeCompare(b.nome));
 
                 let selectHtml = '';
                 categoriasGlobais.forEach(c => { 
-                    selectHtml += `<option value="${c.id}">${c.nome}</option>`; 
+                    // Toda categoria da tabela Category salva produtos em Foods
+                    selectHtml += `<option value="${c.id}" data-tabela="Foods">${c.nome}</option>`; 
                 });
                 document.getElementById('edit-categoria').innerHTML = selectHtml;
 
                 renderizarFiltros();
-                return db.ref('Foods').once('value');
-            }).then(snap => {
+                
+                // Agora lê os produtos de ambas as tabelas
+                return Promise.all([
+                    db.ref('Foods').once('value'),
+                    db.ref('FoodsC').once('value')
+                ]);
+            }).then(([snapFoods, snapFoodsC]) => {
                 produtosGlobais = [];
-                snap.forEach(p => {
-                    const val = p.val();
-                    produtosGlobais.push({
-                        id: p.key,
-                        nome: val.name,
-                        preco: val.price,
-                        imagem: val.image,
-                        menuId: val.menuId,
-                        disponivel: val.disponivel !== false
+                
+                if (snapFoods.exists()) {
+                    snapFoods.forEach(p => {
+                        const val = p.val();
+                        if(val.name) {
+                            produtosGlobais.push({
+                                id: p.key,
+                                nome: val.name,
+                                preco: val.price,
+                                imagem: val.image,
+                                menuId: val.menuId,
+                                disponivel: val.disponivel !== false,
+                                tabela: 'Foods'
+                            });
+                        }
                     });
-                });
+                }
+
+                if (snapFoodsC.exists()) {
+                    snapFoodsC.forEach(p => {
+                        const val = p.val();
+                        if(val.nameC) {
+                            produtosGlobais.push({
+                                id: p.key,
+                                nome: val.nameC,
+                                preco: val.priceC,
+                                imagem: val.imageC,
+                                menuId: val.menuId,
+                                disponivel: val.disponivel !== false,
+                                tabela: 'FoodsC'
+                            });
+                        }
+                    });
+                }
+
                 filtrarAdmin(); 
             }).catch(err => {
                 console.error("Erro:", err);
-                alert("Erro ao carregar os dados.");
+                alert("Erro ao carregar os dados. Verifique as regras do Firebase.");
             });
         }
 
@@ -275,24 +290,28 @@
             let html = '';
             lista.forEach(p => {
                 const disponivel = p.disponivel !== false;
+                const isKit = p.tabela === 'FoodsC';
+                
                 const badgeEsgotado = !disponivel ? `<span class="badge bg-secondary badge-esgotado">ESGOTADO</span>` : '';
+                const badgeKit = isKit ? `<span class="badge badge-kit">KIT</span>` : '';
+                
                 const btnToggle = disponivel
-                    ? `<button class="btn-acao btn-disponivel" onclick="toggleDisponibilidade('${p.id}', true)" title="Marcar como esgotado"><i class="bi bi-eye-fill"></i></button>`
-                    : `<button class="btn-acao btn-esgotado" onclick="toggleDisponibilidade('${p.id}', false)" title="Reativar produto"><i class="bi bi-eye-slash-fill"></i></button>`;
+                    ? `<button class="btn-acao btn-disponivel" onclick="toggleDisponibilidade('${p.id}', '${p.tabela}', true)" title="Marcar como esgotado"><i class="bi bi-eye-fill"></i></button>`
+                    : `<button class="btn-acao btn-esgotado" onclick="toggleDisponibilidade('${p.id}', '${p.tabela}', false)" title="Reativar produto"><i class="bi bi-eye-slash-fill"></i></button>`;
 
                 html += `
-                    <div class="admin-card ${!disponivel ? 'esgotado' : ''}">
+                    <div class="admin-card ${!disponivel ? 'esgotado' : ''} ${isKit ? 'tipo-kit' : ''}">
                         <div class="d-flex align-items-center gap-3">
                             <img src="${p.imagem}" class="${!disponivel ? 'grayscale' : ''}" onerror="this.src='https://placehold.co/60x60/eee/999?text=?'">
                             <div>
-                                <h6 class="mb-0 fw-bold text-dark">${p.nome}${badgeEsgotado}</h6>
-                                <span class="text-danger fw-bold">R$ ${p.preco}</span>
+                                <h6 class="mb-0 fw-bold text-dark">${p.nome}${badgeEsgotado}${badgeKit}</h6>
+                                <span class="text-danger fw-bold">R$ ${p.preco || '0,00'}</span>
                             </div>
                         </div>
                         <div class="d-flex gap-2">
                             ${btnToggle}
-                            <button class="btn-acao btn-editar" onclick="abrirEditar('${p.id}')"><i class="bi bi-pencil"></i></button>
-                            <button class="btn-acao btn-excluir" onclick="excluirProduto('${p.id}')"><i class="bi bi-trash"></i></button>
+                            <button class="btn-acao btn-editar" onclick="abrirEditar('${p.id}', '${p.tabela}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn-acao btn-excluir" onclick="excluirProduto('${p.id}', '${p.tabela}')"><i class="bi bi-trash"></i></button>
                         </div>
                     </div>
                 `;
@@ -300,14 +319,14 @@
             container.innerHTML = html;
         }
 
-        function toggleDisponibilidade(id, estaDisponivel) {
+        function toggleDisponibilidade(id, tabela, estaDisponivel) {
             const novoStatus = !estaDisponivel;
-            const acao = novoStatus ? 'reativar este produto (voltar a aparecer no site)' : 'marcar como ESGOTADO (esconder do site)';
+            const acao = novoStatus ? 'reativar este produto' : 'marcar como ESGOTADO';
             if (!confirm(`Deseja ${acao}?`)) return;
             
-            db.ref('Foods/' + id).update({ disponivel: novoStatus })
+            db.ref(tabela + '/' + id).update({ disponivel: novoStatus })
                 .then(() => {
-                    const prod = produtosGlobais.find(p => p.id === id);
+                    const prod = produtosGlobais.find(p => p.id === id && p.tabela === tabela);
                     if (prod) prod.disponivel = novoStatus;
                     filtrarAdmin();
                 })
@@ -346,6 +365,7 @@
         function abrirNovoProduto() {
             document.getElementById('titulo-modal').innerText = "Novo Produto";
             document.getElementById('edit-id').value = '';
+            document.getElementById('edit-tabela').value = ''; 
             document.getElementById('edit-nome').value = '';
             document.getElementById('edit-preco').value = '';
             document.getElementById('edit-imagem-base64').value = '';
@@ -353,15 +373,20 @@
             document.getElementById('img-preview').src = '';
             document.getElementById('img-preview').style.display = 'none';
             document.getElementById('no-img-text').style.display = 'flex';
+            
+            const select = document.getElementById('edit-categoria');
+            if (select.options.length > 0) select.selectedIndex = 0;
+
             new bootstrap.Modal(document.getElementById('modalEditar')).show();
         }
 
-        function abrirEditar(id) {
-            const p = produtosGlobais.find(prod => prod.id === id);
+        function abrirEditar(id, tabela) {
+            const p = produtosGlobais.find(prod => prod.id === id && prod.tabela === tabela);
             if (!p) return;
 
             document.getElementById('titulo-modal').innerText = "Editar Produto";
             document.getElementById('edit-id').value = p.id;
+            document.getElementById('edit-tabela').value = p.tabela;
             document.getElementById('edit-nome').value = p.nome;
             document.getElementById('edit-preco').value = p.preco;
             document.getElementById('edit-categoria').value = p.menuId;
@@ -381,39 +406,48 @@
 
         function salvarProduto() {
             const id = document.getElementById('edit-id').value;
+            const tabelaAntiga = document.getElementById('edit-tabela').value;
             const nome = document.getElementById('edit-nome').value;
             const preco = document.getElementById('edit-preco').value;
             const imagem = document.getElementById('edit-imagem-base64').value;
-            const categoria = document.getElementById('edit-categoria').value;
+            
+            const selectCat = document.getElementById('edit-categoria');
+            const categoria = selectCat.value;
+            // Como agora todas as categorias vêm de Category, todos os novos vão para Foods (mas se for edição de um Kit, mantém em FoodsC)
+            const tabelaNova = tabelaAntiga === 'FoodsC' ? 'FoodsC' : 'Foods';
 
             if (!nome || !preco) { alert("Preencha o nome e o preço!"); return; }
 
-            const dados = {
-                name: nome, price: preco, image: imagem, menuId: categoria,
-                description: "", discount: "", validadeFim: "", validadeInicio: ""
-            };
+            const dados = tabelaNova === 'Foods' 
+                ? { name: nome, price: preco, image: imagem, menuId: categoria, description: "", discount: "", validadeFim: "", validadeInicio: "" }
+                : { nameC: nome, priceC: preco, imageC: imagem, menuId: categoria };
 
-            if (id) {
-                const prodAtual = produtosGlobais.find(p => p.id === id);
-                dados.disponivel = prodAtual ? (prodAtual.disponivel !== false) : true;
-                db.ref('Foods/' + id).update(dados).then(() => {
-                    alert("Produto atualizado com sucesso!");
-                    bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
-                    carregarDadosAdmin();
-                });
+            if (id && tabelaAntiga) {
+                if (tabelaAntiga !== tabelaNova) {
+                    db.ref(tabelaAntiga + '/' + id).remove().then(() => {
+                        dados.disponivel = true;
+                        db.ref(tabelaNova).push(dados).then(() => finalizarSalvar());
+                    });
+                } else {
+                    const prodAtual = produtosGlobais.find(p => p.id === id && p.tabela === tabelaAntiga);
+                    dados.disponivel = prodAtual ? (prodAtual.disponivel !== false) : true;
+                    db.ref(tabelaAntiga + '/' + id).update(dados).then(() => finalizarSalvar());
+                }
             } else {
                 dados.disponivel = true;
-                db.ref('Foods').push(dados).then(() => {
-                    alert("Produto criado com sucesso!");
-                    bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
-                    carregarDadosAdmin();
-                });
+                db.ref(tabelaNova).push(dados).then(() => finalizarSalvar());
             }
         }
 
-        function excluirProduto(id) {
+        function finalizarSalvar() {
+            alert("Produto salvo com sucesso!");
+            bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
+            carregarDadosAdmin();
+        }
+
+        function excluirProduto(id, tabela) {
             if (confirm("Tem certeza que deseja excluir este produto?")) {
-                db.ref('Foods/' + id).remove().then(() => { carregarDadosAdmin(); });
+                db.ref(tabela + '/' + id).remove().then(() => { carregarDadosAdmin(); });
             }
         }
     </script>

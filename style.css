@@ -185,8 +185,8 @@ body {
 
 .banner-item img {
     width: 100%;
-    height: auto; /* Ajusta a altura conforme a largura */
-    object-fit: contain; /* Garante que a imagem apareça inteira */
+    height: auto;
+    object-fit: contain;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     display: block;
@@ -225,8 +225,6 @@ body {
 .produto-nome { font-size: 0.95rem; font-weight: 600; margin: 0 0 4px; color: var(--escuro); }
 .produto-preco { font-size: 1.05rem; font-weight: 700; color: var(--vermelho); }
 .produto-preco small { font-size: 0.75rem; color: var(--texto-suave); font-weight: 500; }
-.btn-adicionar { background: #fff; color: var(--vermelho); border: 1px solid var(--vermelho); width: 36px; height: 36px; border-radius: 50%; align-self: center; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; }
-.btn-adicionar:active { background: var(--vermelho); color: #fff; }
 
 /* ============ BARRA INFERIOR ============ */
 .barra-navegacao { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: #fff; border-top: 1px solid var(--cinza-borda); display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
@@ -295,3 +293,137 @@ body {
 .lista-info li { display: flex; justify-content: space-between; margin-bottom: 4px; color: var(--texto); }
 .lista-info li:last-child { margin-bottom: 0; }
 .lista-info li i { margin-right: 5px; }
+
+/* ========================================================= */
+/* ============ ESTILOS NOVOS: KITS E ZOOM (LIGHTBOX) ======= */
+/* ========================================================= */
+
+.produto-card.kit-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.produto-card.kit-card .produto-imagem {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: zoom-in;
+    transition: transform 0.2s;
+}
+
+.produto-card.kit-card .produto-imagem:active {
+    transform: scale(0.98);
+}
+
+.produto-card.kit-card .produto-info {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.produto-card.kit-card .produto-nome {
+    font-size: 1.1rem;
+    flex: 1;
+}
+
+.produto-card .btn-adicionar {
+    background: var(--vermelho-claro);
+    color: var(--vermelho);
+    border: 1px solid var(--vermelho);
+    width: 36px; 
+    height: 36px; 
+    border-radius: 50%; 
+    align-self: center; 
+    font-size: 1.2rem; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-shrink: 0; 
+    transition: 0.2s;
+}
+.produto-card .btn-adicionar:active {
+    background: var(--vermelho);
+    color: #fff;
+}
+
+.produto-card.kit-card .btn-adicionar {
+    width: 100%;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--vermelho);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 10px;
+    border: none;
+    box-shadow: 0 4px 10px rgba(217, 31, 38, 0.3);
+}
+.produto-card.kit-card .btn-adicionar:active {
+    transform: scale(0.98);
+}
+
+/* ============ LIGHTBOX (ZOOM DA IMAGEM) ============ */
+.lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.lightbox-overlay.show {
+    display: flex;
+    opacity: 1;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 100%;
+    max-height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lightbox-content img {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.btn-fechar-lightbox {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #fff;
+    color: #000;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    z-index: 10000;
+}

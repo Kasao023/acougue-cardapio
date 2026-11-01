@@ -70,50 +70,79 @@ window.verificarPagamento = function() {
 
 // CARREGAR DADOS DO FIREBASE
 function carregarDados() {
-    Promise.all([
-        db.ref('Category').once('value'),
-        db.ref('Foods').once('value')
-    ]).then(([snapCat, snapProd]) => {
+    // Lê APENAS a tabela Category
+    db.ref('Category').once('value').then(snapCat => {
         categorias = [];
-        produtos = [];
 
         snapCat.forEach(c => {
-            categorias.push({ id: c.key, nome: c.val().name });
-        });
-        categorias.sort((a, b) => {
-    const ordemFixa = ['Bovino', 'Suíno', 'Aves', 'Kits da Semana', 'Kits Churrasco', 'Assados e Domingos'];
-    const posA = ordemFixa.indexOf(a.nome);
-    const posB = ordemFixa.indexOf(b.nome);
-    // Se algum não estiver na lista, joga pro final em ordem alfabética
-    const finalA = posA === -1 ? 999 : posA;
-    const finalB = posB === -1 ? 999 : posB;
-    if (finalA !== finalB) return finalA - finalB;
-    return a.nome.localeCompare(b.nome);
-});
-        renderizarNavCategorias();
-
-        snapProd.forEach(p => {
-            const val = p.val();
-            if (val.name && val.menuId) {
-                const parsed = parsePreco(val.price || '');
-                produtos.push({
-                    id: p.key,
-                    nome: val.name,
-                    precoNumerico: parsed.valor,
-                    unidade: parsed.unidade,
-                    imagem: val.image || '',
-                    menuId: val.menuId,
-                    disponivel: val.disponivel !== false
-                });
+            const val = c.val();
+            if (val && val.name) {
+                categorias.push({ id: c.key, nome: val.name });
             }
         });
 
+        categorias.sort((a, b) => {
+            const ordemFixa = ['Bovino', 'Suíno', 'Aves', 'Kits da Semana', 'Kits Churrasco', 'Assados e Domingos'];
+            const posA = ordemFixa.indexOf(a.nome);
+            const posB = ordemFixa.indexOf(b.nome);
+            const finalA = posA === -1 ? 999 : posA;
+            const finalB = posB === -1 ? 999 : posB;
+            if (finalA !== finalB) return finalA - finalB;
+            return a.nome.localeCompare(b.nome);
+        });
+
+        return Promise.all([
+            db.ref('Foods').once('value'),
+            db.ref('FoodsC').once('value')
+        ]);
+    }).then(([snapProd, snapProdC]) => {
+        produtos = [];
+
+        if (snapProd.exists()) {
+            snapProd.forEach(p => {
+                const val = p.val();
+                if (val.name && val.menuId) {
+                    const parsed = parsePreco(val.price || '');
+                    produtos.push({
+                        id: p.key,
+                        nome: val.name,
+                        precoNumerico: parsed.valor,
+                        unidade: parsed.unidade,
+                        imagem: val.image || '',
+                        menuId: val.menuId,
+                        disponivel: val.disponivel !== false,
+                        isKit: false
+                    });
+                }
+            });
+        }
+
+        if (snapProdC.exists()) {
+            snapProdC.forEach(p => {
+                const val = p.val();
+                if (val.nameC && val.menuId) {
+                    const parsed = parsePreco(val.priceC || '');
+                    produtos.push({
+                        id: p.key,
+                        nome: val.nameC,
+                        precoNumerico: parsed.valor,
+                        unidade: 'un', // Força unidade para kits
+                        imagem: val.imageC || '',
+                        menuId: val.menuId,
+                        disponivel: val.disponivel !== false,
+                        isKit: true
+                    });
+                }
+            });
+        }
+
+        renderizarNavCategorias();
         renderizarProdutos();
         document.getElementById('loading').style.display = 'none';
         carregarCarrinhoSalvo();
     }).catch(err => {
         console.error('Erro:', err);
-        document.getElementById('loading').innerHTML = '<div class="alert alert-danger">Erro ao carregar produtos.</div>';
+        document.getElementById('loading').innerHTML = '<div class="alert alert-danger">Erro ao carregar produtos. Verifique as regras do Firebase.</div>';
     });
 }
 
@@ -135,9 +164,11 @@ function renderizarNavCategorias() {
     const container = document.getElementById('categorias-scroll');
     if (!container) return;
     let html = '<button class="categoria-chip ativo" onclick="scrollParaCategoria(\'todos\', this)">Todos</button>';
+    
     categorias.forEach(cat => {
         html += `<button class="categoria-chip" onclick="scrollParaCategoria('${cat.id}', this)">${cat.nome}</button>`;
     });
+    
     container.innerHTML = html;
 }
 
@@ -173,15 +204,21 @@ function renderizarProdutos(filtro = '') {
                 ? `R$ ${prod.precoNumerico.toFixed(2).replace('.', ',')} <small>${prod.unidade === 'kg' ? '/kg' : '/un'}</small>`
                 : 'Consulte';
             const podeAdicionar = prod.precoNumerico > 0;
+            const isKit = prod.isKit;
+            const classeCard = isKit ? 'produto-card kit-card' : 'produto-card';
 
             html += `
-                <div class="produto-card">
-                    <img src="${prod.imagem}" alt="${prod.nome}" class="produto-imagem" loading="lazy" onerror="this.src='https://placehold.co/150x150/eeeeee/999999?text=Sem+Foto'">
+                <div class="${classeCard}">
+                    <img src="${prod.imagem}" alt="${prod.nome}" class="produto-imagem" loading="lazy" onclick="window.abrirLightbox('${prod.imagem}')" onerror="this.src='https://placehold.co/150x150/eeeeee/999999?text=Sem+Foto'">
+                    
                     <div class="produto-info">
                         <h3 class="produto-nome">${prod.nome}</h3>
                         <div class="produto-preco">${precoExibir}</div>
+                        ${isKit && podeAdicionar ? `<button class="btn-adicionar" onclick="window.abrirModalPeso('${prod.id}')">Adicionar</button>` : ''}
                     </div>
-                    ${podeAdicionar ? `<button class="btn-adicionar" onclick="window.abrirModalPeso('${prod.id}')"><i class="bi bi-plus-lg"></i></button>` : `<button class="btn-adicionar" style="background:#ccc;" disabled><i class="bi bi-x"></i></button>`}
+
+                    ${!isKit && podeAdicionar ? `<button class="btn-adicionar" onclick="window.abrirModalPeso('${prod.id}')"><i class="bi bi-plus-lg"></i></button>` : ''}
+                    ${!podeAdicionar ? `<button class="btn-adicionar" style="background:#ccc; color:#fff;" disabled><i class="bi bi-x"></i></button>` : ''}
                 </div>
             `;
         });
@@ -198,6 +235,38 @@ window.filtrarProdutos = function() {
     renderizarProdutos(document.getElementById('busca').value);
 }
 
+// LIGHTBOX (ZOOM DA IMAGEM)
+window.abrirLightbox = function(urlImagem) {
+    let lightbox = document.getElementById('lightbox-modal');
+    
+    if (!lightbox) {
+        lightbox = document.createElement('div');
+        lightbox.id = 'lightbox-modal';
+        lightbox.className = 'lightbox-overlay';
+        lightbox.innerHTML = `
+            <button class="btn-fechar-lightbox" onclick="window.fecharLightbox()">&times;</button>
+            <div class="lightbox-content" onclick="event.stopPropagation()">
+                <img id="lightbox-img" src="" alt="Zoom do Produto">
+            </div>
+        `;
+        lightbox.onclick = function() { window.fecharLightbox(); };
+        document.body.appendChild(lightbox);
+    }
+
+    document.getElementById('lightbox-img').src = urlImagem;
+    
+    setTimeout(() => {
+        lightbox.classList.add('show');
+    }, 10);
+};
+
+window.fecharLightbox = function() {
+    const lightbox = document.getElementById('lightbox-modal');
+    if (lightbox) {
+        lightbox.classList.remove('show');
+    }
+};
+
 // MODAL DE ADIÇÃO
 window.abrirModalPeso = function(produtoId) {
     const prod = produtos.find(p => p.id === produtoId);
@@ -213,7 +282,9 @@ window.abrirModalPeso = function(produtoId) {
     const opcoesCorte = document.getElementById('opcoes-corte-wrapper');
     const qtdRapida = document.getElementById('qtd-rapida-wrapper');
 
-    if (prod.unidade === 'un') {
+    const isKitBlindado = prod.isKit || prod.unidade === 'un';
+
+    if (isKitBlindado) {
         wrapperUnidade.style.display = 'none';
         opcoesCorte.style.display = 'none';
         if (qtdRapida) qtdRapida.style.display = 'none';
@@ -239,7 +310,9 @@ window.abrirModalPeso = function(produtoId) {
 window.setQtd = function(valor) {
     const unidade = document.querySelector('input[name="unidade"]:checked')?.value || 'g';
     const input = document.getElementById('modal-quantidade');
-    if (produtoAtual.unidade === 'un') input.value = valor / 1000;
+    const isKit = produtoAtual.isKit || produtoAtual.unidade === 'un';
+    
+    if (isKit) input.value = valor / 1000;
     else if (unidade === 'g') input.value = valor;
     else input.value = valor / 1000;
     atualizarCalculo();
@@ -249,14 +322,15 @@ window.atualizarCalculo = function() {
     if (!produtoAtual) return;
     const input = document.getElementById('modal-quantidade');
     const labelQtd = document.getElementById('modal-qtd-label');
-    const unidade = produtoAtual.unidade === 'un' ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
+    const isKit = produtoAtual.isKit || produtoAtual.unidade === 'un';
+    const unidade = isKit ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
 
-        if (produtoAtual.unidade !== 'un') {
+    if (!isKit) {
         labelQtd.textContent = unidade === 'g' ? 'Quantidade (g)' : 'Quantidade (kg)';
     }
 
     const qtdDigitada = parseFloat(input.value) || 0;
-    let quantidadeKg = produtoAtual.unidade === 'un' ? qtdDigitada : (unidade === 'g' ? qtdDigitada / 1000 : qtdDigitada);
+    let quantidadeKg = isKit ? qtdDigitada : (unidade === 'g' ? qtdDigitada / 1000 : qtdDigitada);
     const subtotal = produtoAtual.precoNumerico * quantidadeKg;
     document.getElementById('modal-subtotal').textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
 }
@@ -271,13 +345,15 @@ window.confirmarAdicao = function() {
         return;
     }
 
-    const unidade = produtoAtual.unidade === 'un' ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
-    let quantidadeKg = produtoAtual.unidade === 'un' ? qtdDigitada : (unidade === 'g' ? qtdDigitada / 1000 : qtdDigitada);
-    let quantidadeExibir = produtoAtual.unidade === 'un' ? `${qtdDigitada} un` : (unidade === 'g' ? `${qtdDigitada}g` : `${qtdDigitada}kg`);
+    const isKit = produtoAtual.isKit || produtoAtual.unidade === 'un';
+    const unidade = isKit ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
+    
+    let quantidadeKg = isKit ? qtdDigitada : (unidade === 'g' ? qtdDigitada / 1000 : qtdDigitada);
+    let quantidadeExibir = isKit ? `${qtdDigitada} un` : (unidade === 'g' ? `${qtdDigitada}g` : `${qtdDigitada}kg`);
     const subtotal = produtoAtual.precoNumerico * quantidadeKg;
 
     let tipoCorte = '';
-    if (produtoAtual.unidade === 'kg') {
+    if (!isKit && produtoAtual.unidade === 'kg') {
         tipoCorte = document.querySelector('input[name="tipoCorte"]:checked')?.value || 'Inteiro';
     }
     const observacao = document.getElementById('modal-observacao').value.trim();
@@ -287,7 +363,7 @@ window.confirmarAdicao = function() {
         nome: produtoAtual.nome,
         imagem: produtoAtual.imagem,
         precoKg: produtoAtual.precoNumerico,
-        unidade: produtoAtual.unidade,
+        unidade: unidade,
         quantidadeKg: quantidadeKg,
         quantidadeExibir: quantidadeExibir,
         subtotal: subtotal,
