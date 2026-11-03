@@ -287,10 +287,9 @@ body {
 .lista-info li i { margin-right: 5px; }
 
 /* ========================================================= */
-/* ============ ESTILOS NOVOS: KITS E ZOOM (LIGHTBOX) ======= */
+/* ============ ESTILOS DE KITS E ZOOM (LIGHTBOX) =========== */
 /* ========================================================= */
 
-/* KIT NO CARD: AGORA FICA IGUAL AOS OUTROS PRODUTOS (LINHA HORIZONTAL) */
 .produto-card.kit-card {
     flex-direction: row;
     align-items: center;
@@ -602,4 +601,65 @@ body {
 .texto-info p {
     margin-bottom: 5px;
     line-height: 1.4;
+}
+
+/* ============ SEÇÃO DE PROMOÇÃO ============ */
+.categoria-titulo-promo {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 15px 0 10px;
+    color: var(--vermelho);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.categoria-titulo-promo i {
+    animation: pulse-fogo 1.5s infinite;
+}
+
+@keyframes pulse-fogo {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+/* CARROSSEL HORIZONTAL DE PROMOÇÕES */
+.lista-promocoes {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.lista-promocoes::-webkit-scrollbar {
+    display: none;
+}
+
+.promo-card {
+    flex: 0 0 75%;
+    max-width: 320px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(217, 31, 38, 0.15);
+    border: 1.5px solid var(--vermelho);
+    background: #fff;
+    transition: transform 0.2s;
+    scroll-snap-align: start;
+}
+
+.promo-card:active {
+    transform: scale(0.98);
+}
+
+.promo-imagem {
+    width: 100%;
+    height: 160px;
+    display: block;
+    object-fit: cover;
 }

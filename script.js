@@ -19,6 +19,7 @@ const WHATSAPP = "5515998027793";
 
 let categorias = [];
 let produtos = [];
+let promocoes = [];
 let carrinho = [];
 let produtoAtual = null;
 let qtdDetalhes = 1;
@@ -26,18 +27,11 @@ let qtdDetalhes = 1;
 // ============================================
 // FUNÇÃO AUXILIAR: IDENTIFICAR SE É KIT
 // ============================================
-// Um produto é KIT se:
-// 1. Veio da tabela FoodsC (isKit original = true), OU
-// 2. O nome contém "kit", OU
-// 3. A categoria (nome) contém "kit"
 function ehKit(prod) {
     if (prod.isKit === true) return true;
     if (prod.nome && prod.nome.toLowerCase().includes('kit')) return true;
-    
-    // Verifica o nome da categoria
     const cat = categorias.find(c => c.id === prod.menuId);
     if (cat && cat.nome.toLowerCase().includes('kit')) return true;
-    
     return false;
 }
 
@@ -95,7 +89,7 @@ function carregarDados() {
         });
 
         categorias.sort((a, b) => {
-            const ordemFixa = ['Ofertas da Semana', 'Kits da Semana', 'Kits Churrasco', 'Promoções', 'Bovino', 'Suíno', 'Aves', 'Assados e Domingos'];
+            const ordemFixa = ['Promoção', 'Kits da Semana', 'Kits Churrasco', 'Promoções', 'Bovino', 'Suíno', 'Aves', 'Assados e Domingos'];
             const posA = ordemFixa.indexOf(a.nome);
             const posB = ordemFixa.indexOf(b.nome);
             const finalA = posA === -1 ? 999 : posA;
@@ -106,10 +100,12 @@ function carregarDados() {
 
         return Promise.all([
             db.ref('Foods').once('value'),
-            db.ref('FoodsC').once('value')
+            db.ref('FoodsC').once('value'),
+            db.ref('Promocoes').once('value') // NOVA TABELA
         ]);
-    }).then(([snapProd, snapProdC]) => {
+    }).then(([snapProd, snapProdC, snapPromo]) => {
         produtos = [];
+        promocoes = [];
 
         if (snapProd.exists()) {
             snapProd.forEach(p => {
@@ -155,6 +151,19 @@ function carregarDados() {
             });
         }
 
+        // CARREGAR PROMOÇÕES (APENAS IMAGEM)
+        if (snapPromo.exists()) {
+            snapPromo.forEach(p => {
+                const val = p.val();
+                if (val.imagem) {
+                    promocoes.push({
+                        id: p.key,
+                        imagem: val.imagem
+                    });
+                }
+            });
+        }
+
         renderizarNavCategorias();
         renderizarProdutos();
         document.getElementById('loading').style.display = 'none';
@@ -178,11 +187,16 @@ function parsePreco(precoStr) {
     return { valor, unidade };
 }
 
-// RENDERIZAR NAVEGAÇÃO
+// RENDERIZAR NAVEGAÇÃO (ADICIONA "PROMOÇÃO" COMO PRIMEIRO CHIP)
 function renderizarNavCategorias() {
     const container = document.getElementById('categorias-scroll');
     if (!container) return;
     let html = '<button class="categoria-chip ativo" onclick="scrollParaCategoria(\'todos\', this)">Todos</button>';
+    
+    // Adiciona "Promoção" como chip fixo antes das categorias
+    if (promocoes.length > 0) {
+        html += `<button class="categoria-chip" onclick="scrollParaCategoria('promocao', this)">🔥 Promoção</button>`;
+    }
     
     categorias.forEach(cat => {
         html += `<button class="categoria-chip" onclick="scrollParaCategoria('${cat.id}', this)">${cat.nome}</button>`;
@@ -199,7 +213,7 @@ function scrollParaCategoria(id, btn) {
     if (secao) secao.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// RENDERIZAR PRODUTOS
+// RENDERIZAR PRODUTOS (INCLUINDO PROMOÇÕES)
 function renderizarProdutos(filtro = '') {
     const container = document.getElementById('produtos-container');
     if (!container) return;
@@ -207,6 +221,26 @@ function renderizarProdutos(filtro = '') {
     let html = '';
     let total = 0;
 
+    // ============ SEÇÃO DE PROMOÇÃO ============
+    if (promocoes.length > 0 && (termo === '' || termo.includes('promo'))) {
+        html += `<section class="categoria-secao" id="secao-promocao">`;
+        html += `<h2 class="categoria-titulo-promo"><i class="bi bi-fire"></i> Promoção</h2>`;
+        html += `<div class="lista-promocoes">`;
+        
+        promocoes.forEach(promo => {
+            html += `
+                <div class="promo-card" onclick="window.abrirLightbox('${promo.imagem}')" style="cursor: zoom-in;">
+                    <img src="${promo.imagem}" alt="Promoção" class="promo-imagem" loading="lazy"
+                         onerror="this.src='https://placehold.co/600x400/eeeeee/999999?text=Promoção'">
+                </div>
+            `;
+        });
+        
+        html += `</div></section>`;
+        total += promocoes.length;
+    }
+
+    // ============ SEÇÕES DE PRODUTOS ============
     categorias.forEach(cat => {
         const produtosCat = produtos.filter(p => {
             const matchCat = p.menuId === cat.id;
@@ -224,8 +258,6 @@ function renderizarProdutos(filtro = '') {
                 ? `R$ ${prod.precoNumerico.toFixed(2).replace('.', ',')} <small>${prod.unidade === 'kg' ? '/kg' : '/un'}</small>`
                 : 'Consulte';
             const podeAdicionar = prod.precoNumerico > 0;
-            
-            // USA A FUNÇÃO AUXILIAR PARA DETECTAR KIT
             const isKit = ehKit(prod);
             const classeCard = isKit ? 'produto-card kit-card' : 'produto-card';
 
@@ -336,7 +368,7 @@ window.toggleInfo = function(elementId) {
     }
 }
 
-// LIGHTBOX
+// LIGHTBOX (USADO TAMBÉM PARA AS PROMOÇÕES)
 window.abrirLightbox = function(urlImagem) {
     let lightbox = document.getElementById('lightbox-modal');
     
@@ -347,7 +379,7 @@ window.abrirLightbox = function(urlImagem) {
         lightbox.innerHTML = `
             <button class="btn-fechar-lightbox" onclick="window.fecharLightbox()">&times;</button>
             <div class="lightbox-content" onclick="event.stopPropagation()">
-                <img id="lightbox-img" src="" alt="Zoom do Produto">
+                <img id="lightbox-img" src="" alt="Zoom da Promoção">
             </div>
         `;
         lightbox.onclick = function() { window.fecharLightbox(); };
@@ -381,7 +413,6 @@ window.abrirModalPeso = function(produtoId, qtdPreDefinida = null) {
     const opcoesCorte = document.getElementById('opcoes-corte-wrapper');
     const qtdRapida = document.getElementById('qtd-rapida-wrapper');
 
-    // USA ehKit TAMBÉM AQUI
     const isKitBlindado = ehKit(prod) || prod.unidade === 'un';
 
     if (isKitBlindado) {

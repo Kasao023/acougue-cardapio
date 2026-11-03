@@ -17,7 +17,11 @@
         #tela-login { position: fixed; inset: 0; background: var(--escuro); display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; }
         .login-box { background: #fff; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
         .login-box img { width: 100px; margin-bottom: 15px; border-radius: 50%; }
-        
+
+        .abas-admin { display: flex; gap: 10px; margin-bottom: 15px; }
+        .aba-admin-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.9rem; background: #fff; color: #777; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .aba-admin-btn.ativo { background: var(--vermelho); color: #fff; box-shadow: 0 4px 10px rgba(217,31,38,0.3); }
+
         .ferramentas-admin { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 60px; z-index: 999; }
         .busca-admin { position: relative; margin-bottom: 10px; }
         .busca-admin i { position: absolute; left: 12px; top: 12px; color: #999; }
@@ -30,6 +34,7 @@
         .admin-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid var(--vermelho); display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .admin-card.esgotado { opacity: 0.7; border-left-color: #999; }
         .admin-card.tipo-kit { border-left-color: #0d6efd; }
+        .admin-card.tipo-promo { border-left-color: #ff9800; }
         .admin-card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
         .admin-card img.grayscale { filter: grayscale(1); }
         
@@ -44,6 +49,7 @@
         .d-none { display: none !important; }
         .badge-esgotado { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; }
         .badge-kit { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; background: #0d6efd; color: white; }
+        .badge-promo { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; background: #ff9800; color: white; }
     </style>
 </head>
 <body>
@@ -65,32 +71,57 @@
         </div>
 
         <div class="container">
-            <div class="ferramentas-admin">
-                <div class="busca-admin">
-                    <i class="bi bi-search"></i>
-                    <input type="text" id="busca-admin" placeholder="Buscar produto por nome..." oninput="filtrarAdmin()">
-                </div>
-                <div class="filtros-categorias" id="filtros-categorias"></div>
-                <div class="form-check form-switch mt-2 mb-0">
-                    <input class="form-check-input" type="checkbox" id="filtro-esgotados" onchange="filtrarAdmin()">
-                    <label class="form-check-label small fw-bold" for="filtro-esgotados">
-                        Mostrar apenas produtos esgotados
-                    </label>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0 fw-bold text-dark" id="titulo-lista">Todos os Produtos</h5>
-                <button class="btn btn-danger fw-bold btn-sm" onclick="abrirNovoProduto()">
-                    <i class="bi bi-plus-lg"></i> Novo
+            <!-- ABAS -->
+            <div class="abas-admin">
+                <button class="aba-admin-btn ativo" onclick="mudarAbaAdmin('produtos', this)">
+                    <i class="bi bi-box-seam"></i> Produtos
+                </button>
+                <button class="aba-admin-btn" onclick="mudarAbaAdmin('promocoes', this)">
+                    <i class="bi bi-fire"></i> Promoções
                 </button>
             </div>
 
-            <div id="lista-admin"></div>
+            <!-- ============ ABA PRODUTOS ============ -->
+            <div id="aba-produtos">
+                <div class="ferramentas-admin">
+                    <div class="busca-admin">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="busca-admin" placeholder="Buscar produto por nome..." oninput="filtrarAdmin()">
+                    </div>
+                    <div class="filtros-categorias" id="filtros-categorias"></div>
+                    <div class="form-check form-switch mt-2 mb-0">
+                        <input class="form-check-input" type="checkbox" id="filtro-esgotados" onchange="filtrarAdmin()">
+                        <label class="form-check-label small fw-bold" for="filtro-esgotados">
+                            Mostrar apenas produtos esgotados
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0 fw-bold text-dark" id="titulo-lista">Todos os Produtos</h5>
+                    <button class="btn btn-danger fw-bold btn-sm" onclick="abrirNovoProduto()">
+                        <i class="bi bi-plus-lg"></i> Novo
+                    </button>
+                </div>
+
+                <div id="lista-admin"></div>
+            </div>
+
+            <!-- ============ ABA PROMOÇÕES ============ -->
+            <div id="aba-promocoes" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0 fw-bold text-dark">Promoções</h5>
+                    <button class="btn btn-warning fw-bold btn-sm text-dark" onclick="abrirNovaPromo()">
+                        <i class="bi bi-plus-lg"></i> Nova Promoção
+                    </button>
+                </div>
+
+                <div id="lista-promocoes"></div>
+            </div>
         </div>
     </div>
 
-    <!-- MODAL EDITAR/CRIAR -->
+    <!-- MODAL PRODUTO -->
     <div class="modal fade" id="modalEditar" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="border-radius: 15px; border: none;">
@@ -115,14 +146,12 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Categoria</label>
-                        <select id="edit-categoria" class="form-select">
-                        </select>
+                        <select id="edit-categoria" class="form-select"></select>
                     </div>
 
-                    <!-- CAMPO SERVE (NOVO) -->
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Serve quantas pessoas? (Para Kits)</label>
-                        <input type="text" id="edit-serve" class="form-control" placeholder="Ex: 5 pessoas">
+                        <input type="text" id="edit-serve" class="form-control" placeholder="Ex: 5">
                     </div>
 
                     <div class="mb-3">
@@ -132,12 +161,41 @@
                             <img id="img-preview" class="img-preview" src="" alt="Prévia da imagem" style="display: none;">
                             <div id="no-img-text" class="img-preview">Nenhuma imagem selecionada</div>
                         </div>
-                        <small class="text-muted" style="font-size: 0.7rem;">Recomendado: imagens quadradas.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-danger fw-bold" onclick="salvarProduto()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PROMOÇÃO -->
+    <div class="modal fade" id="modalPromo" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius: 15px; border: none;">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title fw-bold text-dark" id="titulo-modal-promo">Nova Promoção</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="promo-id">
+                    <input type="hidden" id="promo-imagem-base64">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Arte da Promoção</label>
+                        <input type="file" id="promo-file" class="form-control mb-2" accept="image/*" onchange="previewImagemPromo(event)">
+                        <div id="preview-promo-container">
+                            <img id="promo-preview" class="img-preview" src="" alt="Prévia" style="display: none;">
+                            <div id="promo-no-img-text" class="img-preview">Nenhuma imagem selecionada</div>
+                        </div>
+                        <small class="text-muted" style="font-size: 0.7rem;">Envie a arte da promoção (imagem pronta).</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning fw-bold text-dark" onclick="salvarPromo()">Salvar Promoção</button>
                 </div>
             </div>
         </div>
@@ -164,6 +222,7 @@
 
         let categoriasGlobais = [];
         let produtosGlobais = [];
+        let promocoesGlobais = [];
         let filtroAtual = 'todos';
 
         function verificarSenha() {
@@ -174,6 +233,21 @@
                 carregarDadosAdmin();
             } else {
                 document.getElementById('erro-senha').classList.remove('d-none');
+            }
+        }
+
+        function mudarAbaAdmin(aba, btn) {
+            document.querySelectorAll('.aba-admin-btn').forEach(b => b.classList.remove('ativo'));
+            btn.classList.add('ativo');
+
+            document.getElementById('aba-produtos').classList.add('d-none');
+            document.getElementById('aba-promocoes').classList.add('d-none');
+
+            if (aba === 'produtos') {
+                document.getElementById('aba-produtos').classList.remove('d-none');
+            } else {
+                document.getElementById('aba-promocoes').classList.remove('d-none');
+                carregarPromocoes();
             }
         }
 
@@ -218,7 +292,7 @@
                                 menuId: val.menuId,
                                 disponivel: val.disponivel !== false,
                                 tabela: 'Foods',
-                                serve: val.serve || '' // LÊ O CAMPO SERVE
+                                serve: val.serve || ''
                             });
                         }
                     });
@@ -236,7 +310,7 @@
                                 menuId: val.menuId,
                                 disponivel: val.disponivel !== false,
                                 tabela: 'FoodsC',
-                                serve: val.serveC || '' // LÊ O CAMPO SERVE
+                                serve: val.serveC || ''
                             });
                         }
                     });
@@ -374,7 +448,7 @@
             document.getElementById('edit-tabela').value = ''; 
             document.getElementById('edit-nome').value = '';
             document.getElementById('edit-preco').value = '';
-            document.getElementById('edit-serve').value = ''; // LIMPA O CAMPO SERVE
+            document.getElementById('edit-serve').value = '';
             document.getElementById('edit-imagem-base64').value = '';
             document.getElementById('edit-file').value = '';
             document.getElementById('img-preview').src = '';
@@ -396,7 +470,7 @@
             document.getElementById('edit-tabela').value = p.tabela;
             document.getElementById('edit-nome').value = p.nome;
             document.getElementById('edit-preco').value = p.preco;
-            document.getElementById('edit-serve').value = p.serve || ''; // PREENCHE O CAMPO SERVE
+            document.getElementById('edit-serve').value = p.serve || '';
             document.getElementById('edit-categoria').value = p.menuId;
             document.getElementById('edit-imagem-base64').value = p.imagem;
             
@@ -417,7 +491,7 @@
             const tabelaAntiga = document.getElementById('edit-tabela').value;
             const nome = document.getElementById('edit-nome').value;
             const preco = document.getElementById('edit-preco').value;
-            const serve = document.getElementById('edit-serve').value; // PEGA O VALOR DO CAMPO SERVE
+            const serve = document.getElementById('edit-serve').value;
             const imagem = document.getElementById('edit-imagem-base64').value;
             
             const selectCat = document.getElementById('edit-categoria');
@@ -426,10 +500,9 @@
 
             if (!nome || !preco) { alert("Preencha o nome e o preço!"); return; }
 
-            // SE FOR KIT (FoodsC), SALVA O SERVE. SE FOR PRODUTO NORMAL (Foods), TAMBÉM PODE SALVAR SE QUISER.
             const dados = tabelaNova === 'Foods' 
                 ? { name: nome, price: preco, image: imagem, menuId: categoria, description: "", discount: "", validadeFim: "", validadeInicio: "", serve: serve }
-                : { nameC: nome, priceC: preco, imageC: imagem, menuId: categoria, serveC: serve }; // SALVA O SERVE NO CAMPO CORRETO DO KIT
+                : { nameC: nome, priceC: preco, imageC: imagem, menuId: categoria, serveC: serve };
 
             if (id && tabelaAntiga) {
                 if (tabelaAntiga !== tabelaNova) {
@@ -457,6 +530,133 @@
         function excluirProduto(id, tabela) {
             if (confirm("Tem certeza que deseja excluir este produto?")) {
                 db.ref(tabela + '/' + id).remove().then(() => { carregarDadosAdmin(); });
+            }
+        }
+
+        /* ============================================
+           PROMOÇÕES
+           ============================================ */
+        function carregarPromocoes() {
+            db.ref('Promocoes').once('value').then(snap => {
+                promocoesGlobais = [];
+                if (snap.exists()) {
+                    snap.forEach(p => {
+                        const val = p.val();
+                        if (val.imagem) {
+                            promocoesGlobais.push({ id: p.key, imagem: val.imagem });
+                        }
+                    });
+                }
+                renderizarListaPromocoes();
+            });
+        }
+
+        function renderizarListaPromocoes() {
+            const container = document.getElementById('lista-promocoes');
+            if (promocoesGlobais.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted p-4"><i class="bi bi-fire fs-3 d-block mb-2"></i> Nenhuma promoção cadastrada.</div>`;
+                return;
+            }
+
+            let html = '';
+            promocoesGlobais.forEach(p => {
+                html += `
+                    <div class="admin-card tipo-promo">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="${p.imagem}" onerror="this.src='https://placehold.co/60x60/eee/999?text=?'">
+                            <div>
+                                <h6 class="mb-0 fw-bold text-dark">Promoção <span class="badge badge-promo">PROMO</span></h6>
+                                <small class="text-muted">ID: ${p.id.substring(0, 8)}...</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn-acao btn-editar" onclick="abrirEditarPromo('${p.id}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn-acao btn-excluir" onclick="excluirPromo('${p.id}')"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function previewImagemPromo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 900; 
+                    let width = img.width, height = img.height;
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    document.getElementById('promo-imagem-base64').value = base64;
+                    document.getElementById('promo-preview').src = base64;
+                    document.getElementById('promo-preview').style.display = 'block';
+                    document.getElementById('promo-no-img-text').style.display = 'none';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function abrirNovaPromo() {
+            document.getElementById('titulo-modal-promo').innerText = "Nova Promoção";
+            document.getElementById('promo-id').value = '';
+            document.getElementById('promo-imagem-base64').value = '';
+            document.getElementById('promo-file').value = '';
+            document.getElementById('promo-preview').src = '';
+            document.getElementById('promo-preview').style.display = 'none';
+            document.getElementById('promo-no-img-text').style.display = 'flex';
+            new bootstrap.Modal(document.getElementById('modalPromo')).show();
+        }
+
+        function abrirEditarPromo(id) {
+            const p = promocoesGlobais.find(promo => promo.id === id);
+            if (!p) return;
+
+            document.getElementById('titulo-modal-promo').innerText = "Editar Promoção";
+            document.getElementById('promo-id').value = p.id;
+            document.getElementById('promo-imagem-base64').value = p.imagem;
+            document.getElementById('promo-preview').src = p.imagem;
+            document.getElementById('promo-preview').style.display = 'block';
+            document.getElementById('promo-no-img-text').style.display = 'none';
+            document.getElementById('promo-file').value = '';
+            new bootstrap.Modal(document.getElementById('modalPromo')).show();
+        }
+
+        function salvarPromo() {
+            const id = document.getElementById('promo-id').value;
+            const imagem = document.getElementById('promo-imagem-base64').value;
+
+            if (!imagem) { alert("Envie uma imagem para a promoção!"); return; }
+
+            const dados = { imagem: imagem };
+
+            if (id) {
+                db.ref('Promocoes/' + id).update(dados).then(() => finalizarSalvarPromo());
+            } else {
+                db.ref('Promocoes').push(dados).then(() => finalizarSalvarPromo());
+            }
+        }
+
+        function finalizarSalvarPromo() {
+            alert("Promoção salva com sucesso!");
+            bootstrap.Modal.getInstance(document.getElementById('modalPromo')).hide();
+            carregarPromocoes();
+        }
+
+        function excluirPromo(id) {
+            if (confirm("Tem certeza que deseja excluir esta promoção?")) {
+                db.ref('Promocoes/' + id).remove().then(() => { carregarPromocoes(); });
             }
         }
     </script>
