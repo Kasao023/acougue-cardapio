@@ -642,8 +642,8 @@ body {
 }
 
 .promo-card {
-    flex: 0 0 75%;
-    max-width: 320px;
+    flex: 0 0 42%;
+    max-width: 170px;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 10px rgba(217, 31, 38, 0.15);
@@ -659,7 +659,7 @@ body {
 
 .promo-imagem {
     width: 100%;
-    height: 160px;
+    height: 140px;
     display: block;
     object-fit: cover;
 }
