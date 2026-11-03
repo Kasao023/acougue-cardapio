@@ -157,11 +157,8 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
 
-/* ============ BANNER CORRIGIDO (IMAGEM INTEIRA) ============ */
-.banner-scroll-container { 
-    overflow: hidden; 
-    padding-left: 15px; 
-}
+/* ============ BANNER ============ */
+.banner-scroll-container { overflow: hidden; padding-left: 15px; }
 .banner-scroll {
     display: flex;
     gap: 15px;
@@ -173,7 +170,6 @@ body {
     align-items: center;
 }
 .banner-scroll::-webkit-scrollbar { display: none; }
-
 .banner-item {
     flex: 0 0 90%; 
     scroll-snap-align: start;
@@ -182,7 +178,6 @@ body {
     justify-content: center;
     background: #f9f9f9;
 }
-
 .banner-item img {
     width: 100%;
     height: auto;
@@ -191,7 +186,6 @@ body {
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     display: block;
 }
-
 .banner-dots {
     display: flex;
     justify-content: center;
@@ -205,9 +199,7 @@ body {
     border-radius: 50%;
     transition: background-color 0.3s;
 }
-.banner-dots .dot.ativo {
-    background-color: var(--escuro);
-}
+.banner-dots .dot.ativo { background-color: var(--escuro); }
 
 /* ============ CATEGORIAS E PRODUTOS ============ */
 .categorias-nav { background: #fff; padding: 10px 0; position: sticky; top: 64px; z-index: 99; border-bottom: 1px solid var(--cinza-borda); }
@@ -298,25 +290,24 @@ body {
 /* ============ ESTILOS NOVOS: KITS E ZOOM (LIGHTBOX) ======= */
 /* ========================================================= */
 
+/* KIT NO CARD: AGORA FICA IGUAL AOS OUTROS PRODUTOS (LINHA HORIZONTAL) */
 .produto-card.kit-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    padding: 15px;
-    border: 1px solid var(--cinza-borda);
-    border-radius: 12px;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--cinza-borda);
     background: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    margin-bottom: 15px;
     position: relative;
+    cursor: pointer;
 }
 
 .produto-card.kit-card .produto-imagem {
-    width: 100%;
-    height: 220px;
+    width: 90px;
+    height: 90px;
     object-fit: cover;
-    border-radius: 8px;
-    cursor: zoom-in;
+    border-radius: 10px;
+    cursor: pointer;
     transition: transform 0.2s;
 }
 
@@ -325,15 +316,26 @@ body {
 }
 
 .produto-card.kit-card .produto-info {
-    width: 100%;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    width: auto;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-width: 0;
 }
 
 .produto-card.kit-card .produto-nome {
-    font-size: 1.1rem;
-    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: var(--escuro);
+    flex: unset;
+}
+
+.produto-card.kit-card .produto-preco {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--vermelho);
 }
 
 .produto-card .btn-adicionar {
@@ -356,28 +358,12 @@ body {
     color: #fff;
 }
 
-.produto-card.kit-card .btn-adicionar {
-    width: 100%;
-    height: 44px;
-    border-radius: 8px;
-    background: var(--vermelho);
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 700;
-    margin-top: 10px;
-    border: none;
-    box-shadow: 0 4px 10px rgba(217, 31, 38, 0.3);
-}
-.produto-card.kit-card .btn-adicionar:active {
-    transform: scale(0.98);
-}
-
 /* ============ LIGHTBOX (ZOOM DA IMAGEM) ============ */
 .lightbox-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.95);
-    z-index: 9999;
+    z-index: 99999;
     display: none;
     align-items: center;
     justify-content: center;
@@ -425,5 +411,195 @@ body {
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    z-index: 10000;
+    z-index: 100000;
+}
+
+/* ============ TELA DE DETALHES (KITS) ============ */
+.detalhes-overlay {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    z-index: 99999;
+    display: none;
+    flex-direction: column;
+}
+.detalhes-overlay.show {
+    display: flex;
+}
+
+.detalhes-header {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 10;
+}
+
+.btn-voltar-det {
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    backdrop-filter: blur(4px);
+}
+
+.badge-resfriado {
+    background: #fff;
+    color: var(--escuro);
+    border-radius: 30px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.detalhes-conteudo {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 100px;
+}
+
+.detalhes-img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    cursor: zoom-in;
+    display: block;
+}
+
+.detalhes-nome {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--escuro);
+    margin: 20px 20px 15px 20px;
+    line-height: 1.3;
+}
+
+.detalhes-cards {
+    display: flex;
+    gap: 10px;
+    margin: 0 20px 25px 20px;
+}
+
+.detalhes-card-info {
+    flex: 1;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.detalhes-card-info .label {
+    color: var(--texto-suave);
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+}
+
+.detalhes-card-info strong {
+    font-size: 1.1rem;
+    color: var(--escuro);
+}
+
+.detalhes-secao {
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.detalhes-secao h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--escuro);
+    margin-bottom: 12px;
+}
+
+.detalhes-botoes {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-info {
+    background: var(--cinza-claro);
+    color: var(--texto);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.detalhes-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: #fff;
+    border-top: 1px solid var(--cinza-borda);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.detalhes-qtd {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.detalhes-qtd button {
+    background: transparent;
+    border: none;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.detalhes-qtd span {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--escuro);
+    min-width: 20px;
+    text-align: center;
+}
+
+.btn-detalhes-add {
+    background: var(--vermelho-escuro);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(217, 31, 38, 0.3);
+    transition: transform 0.2s;
+}
+
+.btn-detalhes-add:active {
+    transform: scale(0.97);
+}
+
+.texto-info p {
+    margin-bottom: 5px;
+    line-height: 1.4;
 }

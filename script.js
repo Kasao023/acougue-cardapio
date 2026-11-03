@@ -21,6 +21,25 @@ let categorias = [];
 let produtos = [];
 let carrinho = [];
 let produtoAtual = null;
+let qtdDetalhes = 1;
+
+// ============================================
+// FUNÇÃO AUXILIAR: IDENTIFICAR SE É KIT
+// ============================================
+// Um produto é KIT se:
+// 1. Veio da tabela FoodsC (isKit original = true), OU
+// 2. O nome contém "kit", OU
+// 3. A categoria (nome) contém "kit"
+function ehKit(prod) {
+    if (prod.isKit === true) return true;
+    if (prod.nome && prod.nome.toLowerCase().includes('kit')) return true;
+    
+    // Verifica o nome da categoria
+    const cat = categorias.find(c => c.id === prod.menuId);
+    if (cat && cat.nome.toLowerCase().includes('kit')) return true;
+    
+    return false;
+}
 
 // NAVEGAÇÃO DE TELAS
 window.entrarNaLoja = function() {
@@ -43,12 +62,8 @@ window.voltarParaHome = function() {
 }
 
 // MODAL SOBRE NÓS
-window.abrirSobreNos = function() {
-    document.getElementById('modalSobre').classList.add('show');
-}
-window.fecharSobreNos = function() {
-    document.getElementById('modalSobre').classList.remove('show');
-}
+window.abrirSobreNos = function() { document.getElementById('modalSobre').classList.add('show'); }
+window.fecharSobreNos = function() { document.getElementById('modalSobre').classList.remove('show'); }
 window.mudarAba = function(abaId, btn) {
     document.querySelectorAll('.aba-btn').forEach(b => b.classList.remove('ativo'));
     btn.classList.add('ativo');
@@ -70,10 +85,8 @@ window.verificarPagamento = function() {
 
 // CARREGAR DADOS DO FIREBASE
 function carregarDados() {
-    // Lê APENAS a tabela Category
     db.ref('Category').once('value').then(snapCat => {
         categorias = [];
-
         snapCat.forEach(c => {
             const val = c.val();
             if (val && val.name) {
@@ -82,7 +95,7 @@ function carregarDados() {
         });
 
         categorias.sort((a, b) => {
-            const ordemFixa = ['Bovino', 'Suíno', 'Aves', 'Kits da Semana', 'Kits Churrasco', 'Assados e Domingos'];
+            const ordemFixa = ['Ofertas da Semana', 'Kits da Semana', 'Kits Churrasco', 'Promoções', 'Bovino', 'Suíno', 'Aves', 'Assados e Domingos'];
             const posA = ordemFixa.indexOf(a.nome);
             const posB = ordemFixa.indexOf(b.nome);
             const finalA = posA === -1 ? 999 : posA;
@@ -111,7 +124,10 @@ function carregarDados() {
                         imagem: val.image || '',
                         menuId: val.menuId,
                         disponivel: val.disponivel !== false,
-                        isKit: false
+                        isKit: false,
+                        serve: val.serve || 'N/A',
+                        itens: val.itens || 'Informações no local',
+                        detalhes: val.detalhes || 'Produto fresco e de alta qualidade.'
                     });
                 }
             });
@@ -126,11 +142,14 @@ function carregarDados() {
                         id: p.key,
                         nome: val.nameC,
                         precoNumerico: parsed.valor,
-                        unidade: 'un', // Força unidade para kits
+                        unidade: 'un',
                         imagem: val.imageC || '',
                         menuId: val.menuId,
                         disponivel: val.disponivel !== false,
-                        isKit: true
+                        isKit: true,
+                        serve: val.serveC || '5',
+                        itens: val.itensC || 'Consulte os itens na arte do kit',
+                        detalhes: val.detalhesC || 'Kit completo e selecionado.'
                     });
                 }
             });
@@ -142,7 +161,7 @@ function carregarDados() {
         carregarCarrinhoSalvo();
     }).catch(err => {
         console.error('Erro:', err);
-        document.getElementById('loading').innerHTML = '<div class="alert alert-danger">Erro ao carregar produtos. Verifique as regras do Firebase.</div>';
+        document.getElementById('loading').innerHTML = '<div class="alert alert-danger">Erro ao carregar produtos.</div>';
     });
 }
 
@@ -159,7 +178,7 @@ function parsePreco(precoStr) {
     return { valor, unidade };
 }
 
-// RENDERIZAR PRODUTOS
+// RENDERIZAR NAVEGAÇÃO
 function renderizarNavCategorias() {
     const container = document.getElementById('categorias-scroll');
     if (!container) return;
@@ -180,6 +199,7 @@ function scrollParaCategoria(id, btn) {
     if (secao) secao.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// RENDERIZAR PRODUTOS
 function renderizarProdutos(filtro = '') {
     const container = document.getElementById('produtos-container');
     if (!container) return;
@@ -204,23 +224,39 @@ function renderizarProdutos(filtro = '') {
                 ? `R$ ${prod.precoNumerico.toFixed(2).replace('.', ',')} <small>${prod.unidade === 'kg' ? '/kg' : '/un'}</small>`
                 : 'Consulte';
             const podeAdicionar = prod.precoNumerico > 0;
-            const isKit = prod.isKit;
+            
+            // USA A FUNÇÃO AUXILIAR PARA DETECTAR KIT
+            const isKit = ehKit(prod);
             const classeCard = isKit ? 'produto-card kit-card' : 'produto-card';
 
-            html += `
-                <div class="${classeCard}">
-                    <img src="${prod.imagem}" alt="${prod.nome}" class="produto-imagem" loading="lazy" onclick="window.abrirLightbox('${prod.imagem}')" onerror="this.src='https://placehold.co/150x150/eeeeee/999999?text=Sem+Foto'">
-                    
-                    <div class="produto-info">
-                        <h3 class="produto-nome">${prod.nome}</h3>
-                        <div class="produto-preco">${precoExibir}</div>
-                        ${isKit && podeAdicionar ? `<button class="btn-adicionar" onclick="window.abrirModalPeso('${prod.id}')">Adicionar</button>` : ''}
+            if (isKit) {
+                html += `
+                    <div class="${classeCard}" 
+                         style="cursor: pointer;"
+                         onclick="window.clicarKit('${prod.id}')">
+                        <img src="${prod.imagem}" alt="${prod.nome}" class="produto-imagem" loading="lazy" 
+                             onerror="this.src='https://placehold.co/150x150/eeeeee/999999?text=Sem+Foto'">
+                        <div class="produto-info">
+                            <h3 class="produto-nome">${prod.nome}</h3>
+                            <div class="produto-preco">${precoExibir}</div>
+                        </div>
                     </div>
-
-                    ${!isKit && podeAdicionar ? `<button class="btn-adicionar" onclick="window.abrirModalPeso('${prod.id}')"><i class="bi bi-plus-lg"></i></button>` : ''}
-                    ${!podeAdicionar ? `<button class="btn-adicionar" style="background:#ccc; color:#fff;" disabled><i class="bi bi-x"></i></button>` : ''}
-                </div>
-            `;
+                `;
+            } else {
+                html += `
+                    <div class="${classeCard}">
+                        <img src="${prod.imagem}" alt="${prod.nome}" class="produto-imagem" loading="lazy" 
+                             onerror="this.src='https://placehold.co/150x150/eeeeee/999999?text=Sem+Foto'">
+                        <div class="produto-info">
+                            <h3 class="produto-nome">${prod.nome}</h3>
+                            <div class="produto-preco">${precoExibir}</div>
+                        </div>
+                        ${podeAdicionar 
+                            ? `<button class="btn-adicionar" onclick="window.abrirModalPeso('${prod.id}')"><i class="bi bi-plus-lg"></i></button>` 
+                            : `<button class="btn-adicionar" style="background:#ccc; color:#fff;" disabled><i class="bi bi-x"></i></button>`}
+                    </div>
+                `;
+            }
         });
         html += `</div></section>`;
     });
@@ -235,7 +271,72 @@ window.filtrarProdutos = function() {
     renderizarProdutos(document.getElementById('busca').value);
 }
 
-// LIGHTBOX (ZOOM DA IMAGEM)
+// FUNÇÃO GLOBAL PARA CLICAR NO KIT
+window.clicarKit = function(id) {
+    console.log('clicarKit chamada com id:', id);
+    window.abrirDetalhes(id);
+};
+
+// TELA DE DETALHES
+window.abrirDetalhes = function(id) {
+    console.log('abrirDetalhes chamada com id:', id);
+    const prod = produtos.find(p => p.id === id);
+    if (!prod) {
+        console.error('Produto não encontrado para o id:', id);
+        return;
+    }
+
+    produtoAtual = prod;
+    qtdDetalhes = 1;
+
+    document.getElementById('det-img').src = prod.imagem;
+    document.getElementById('det-nome').textContent = prod.nome;
+    document.getElementById('det-preco').textContent = `R$ ${prod.precoNumerico.toFixed(2).replace('.', ',')}`;
+    document.getElementById('det-serve').textContent = prod.serve || 'N/A';
+    document.getElementById('det-itens').textContent = prod.itens;
+    document.getElementById('det-descricao').textContent = prod.detalhes;
+    
+    document.getElementById('det-qtd-txt').textContent = qtdDetalhes;
+    document.getElementById('detalhes-texto').style.display = 'none';
+    document.getElementById('preparo-texto').style.display = 'none';
+
+    document.getElementById('det-btn-add').onclick = () => {
+        window.fecharDetalhes();
+        window.abrirModalPeso(id, qtdDetalhes);
+    };
+
+    const modal = document.getElementById('modalDetalhes');
+    modal.style.display = 'flex';
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+window.fecharDetalhes = function() {
+    const modal = document.getElementById('modalDetalhes');
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+window.alterarQtdDetalhes = function(acao) {
+    if (acao === -1 && qtdDetalhes > 1) {
+        qtdDetalhes--;
+    } else if (acao === 1) {
+        qtdDetalhes++;
+    }
+    document.getElementById('det-qtd-txt').textContent = qtdDetalhes;
+}
+
+window.toggleInfo = function(elementId) {
+    const el = document.getElementById(elementId);
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+    } else {
+        el.style.display = 'none';
+    }
+}
+
+// LIGHTBOX
 window.abrirLightbox = function(urlImagem) {
     let lightbox = document.getElementById('lightbox-modal');
     
@@ -262,13 +363,11 @@ window.abrirLightbox = function(urlImagem) {
 
 window.fecharLightbox = function() {
     const lightbox = document.getElementById('lightbox-modal');
-    if (lightbox) {
-        lightbox.classList.remove('show');
-    }
+    if (lightbox) lightbox.classList.remove('show');
 };
 
-// MODAL DE ADIÇÃO
-window.abrirModalPeso = function(produtoId) {
+// MODAL DE ADIÇÃO (CARRINHO)
+window.abrirModalPeso = function(produtoId, qtdPreDefinida = null) {
     const prod = produtos.find(p => p.id === produtoId);
     if (!prod) return;
     produtoAtual = prod;
@@ -282,7 +381,8 @@ window.abrirModalPeso = function(produtoId) {
     const opcoesCorte = document.getElementById('opcoes-corte-wrapper');
     const qtdRapida = document.getElementById('qtd-rapida-wrapper');
 
-    const isKitBlindado = prod.isKit || prod.unidade === 'un';
+    // USA ehKit TAMBÉM AQUI
+    const isKitBlindado = ehKit(prod) || prod.unidade === 'un';
 
     if (isKitBlindado) {
         wrapperUnidade.style.display = 'none';
@@ -299,10 +399,16 @@ window.abrirModalPeso = function(produtoId) {
         document.getElementById('unidade-g').checked = true;
     }
 
-    document.getElementById('modal-quantidade').value = '';
+    if (qtdPreDefinida !== null) {
+        document.getElementById('modal-quantidade').value = qtdPreDefinida;
+    } else {
+        document.getElementById('modal-quantidade').value = '';
+    }
+
     document.getElementById('modal-observacao').value = '';
     document.getElementById('corte-inteiro').checked = true;
-    document.getElementById('modal-subtotal').textContent = 'R$ 0,00';
+    
+    window.atualizarCalculo();
 
     new bootstrap.Modal(document.getElementById('modalPeso')).show();
 }
@@ -310,7 +416,7 @@ window.abrirModalPeso = function(produtoId) {
 window.setQtd = function(valor) {
     const unidade = document.querySelector('input[name="unidade"]:checked')?.value || 'g';
     const input = document.getElementById('modal-quantidade');
-    const isKit = produtoAtual.isKit || produtoAtual.unidade === 'un';
+    const isKit = ehKit(produtoAtual) || produtoAtual.unidade === 'un';
     
     if (isKit) input.value = valor / 1000;
     else if (unidade === 'g') input.value = valor;
@@ -322,7 +428,7 @@ window.atualizarCalculo = function() {
     if (!produtoAtual) return;
     const input = document.getElementById('modal-quantidade');
     const labelQtd = document.getElementById('modal-qtd-label');
-    const isKit = produtoAtual.isKit || produtoAtual.unidade === 'un';
+    const isKit = ehKit(produtoAtual) || produtoAtual.unidade === 'un';
     const unidade = isKit ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
 
     if (!isKit) {
@@ -345,7 +451,7 @@ window.confirmarAdicao = function() {
         return;
     }
 
-    const isKit = produtoAtual.isKit || produtoAtual.unidade === 'un';
+    const isKit = ehKit(produtoAtual) || produtoAtual.unidade === 'un';
     const unidade = isKit ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
     
     let quantidadeKg = isKit ? qtdDigitada : (unidade === 'g' ? qtdDigitada / 1000 : qtdDigitada);

@@ -119,6 +119,12 @@
                         </select>
                     </div>
 
+                    <!-- CAMPO SERVE (NOVO) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Serve quantas pessoas? (Para Kits)</label>
+                        <input type="text" id="edit-serve" class="form-control" placeholder="Ex: 5 pessoas">
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Foto do Produto</label>
                         <input type="file" id="edit-file" class="form-control mb-2" accept="image/*" onchange="previewImagem(event)">
@@ -172,7 +178,6 @@
         }
 
         function carregarDadosAdmin() {
-            // LÊ APENAS A TABELA 'Category' PARA AS CATEGORIAS
             db.ref('Category').once('value').then(snapCat => {
                 categoriasGlobais = [];
                 if (snapCat.exists()) {
@@ -188,14 +193,12 @@
 
                 let selectHtml = '';
                 categoriasGlobais.forEach(c => { 
-                    // Toda categoria da tabela Category salva produtos em Foods
                     selectHtml += `<option value="${c.id}" data-tabela="Foods">${c.nome}</option>`; 
                 });
                 document.getElementById('edit-categoria').innerHTML = selectHtml;
 
                 renderizarFiltros();
                 
-                // Agora lê os produtos de ambas as tabelas
                 return Promise.all([
                     db.ref('Foods').once('value'),
                     db.ref('FoodsC').once('value')
@@ -214,7 +217,8 @@
                                 imagem: val.image,
                                 menuId: val.menuId,
                                 disponivel: val.disponivel !== false,
-                                tabela: 'Foods'
+                                tabela: 'Foods',
+                                serve: val.serve || '' // LÊ O CAMPO SERVE
                             });
                         }
                     });
@@ -231,7 +235,8 @@
                                 imagem: val.imageC,
                                 menuId: val.menuId,
                                 disponivel: val.disponivel !== false,
-                                tabela: 'FoodsC'
+                                tabela: 'FoodsC',
+                                serve: val.serveC || '' // LÊ O CAMPO SERVE
                             });
                         }
                     });
@@ -306,6 +311,7 @@
                             <div>
                                 <h6 class="mb-0 fw-bold text-dark">${p.nome}${badgeEsgotado}${badgeKit}</h6>
                                 <span class="text-danger fw-bold">R$ ${p.preco || '0,00'}</span>
+                                ${isKit && p.serve ? `<br><small class="text-muted">Serve: ${p.serve}</small>` : ''}
                             </div>
                         </div>
                         <div class="d-flex gap-2">
@@ -368,6 +374,7 @@
             document.getElementById('edit-tabela').value = ''; 
             document.getElementById('edit-nome').value = '';
             document.getElementById('edit-preco').value = '';
+            document.getElementById('edit-serve').value = ''; // LIMPA O CAMPO SERVE
             document.getElementById('edit-imagem-base64').value = '';
             document.getElementById('edit-file').value = '';
             document.getElementById('img-preview').src = '';
@@ -389,6 +396,7 @@
             document.getElementById('edit-tabela').value = p.tabela;
             document.getElementById('edit-nome').value = p.nome;
             document.getElementById('edit-preco').value = p.preco;
+            document.getElementById('edit-serve').value = p.serve || ''; // PREENCHE O CAMPO SERVE
             document.getElementById('edit-categoria').value = p.menuId;
             document.getElementById('edit-imagem-base64').value = p.imagem;
             
@@ -409,18 +417,19 @@
             const tabelaAntiga = document.getElementById('edit-tabela').value;
             const nome = document.getElementById('edit-nome').value;
             const preco = document.getElementById('edit-preco').value;
+            const serve = document.getElementById('edit-serve').value; // PEGA O VALOR DO CAMPO SERVE
             const imagem = document.getElementById('edit-imagem-base64').value;
             
             const selectCat = document.getElementById('edit-categoria');
             const categoria = selectCat.value;
-            // Como agora todas as categorias vêm de Category, todos os novos vão para Foods (mas se for edição de um Kit, mantém em FoodsC)
             const tabelaNova = tabelaAntiga === 'FoodsC' ? 'FoodsC' : 'Foods';
 
             if (!nome || !preco) { alert("Preencha o nome e o preço!"); return; }
 
+            // SE FOR KIT (FoodsC), SALVA O SERVE. SE FOR PRODUTO NORMAL (Foods), TAMBÉM PODE SALVAR SE QUISER.
             const dados = tabelaNova === 'Foods' 
-                ? { name: nome, price: preco, image: imagem, menuId: categoria, description: "", discount: "", validadeFim: "", validadeInicio: "" }
-                : { nameC: nome, priceC: preco, imageC: imagem, menuId: categoria };
+                ? { name: nome, price: preco, image: imagem, menuId: categoria, description: "", discount: "", validadeFim: "", validadeInicio: "", serve: serve }
+                : { nameC: nome, priceC: preco, imageC: imagem, menuId: categoria, serveC: serve }; // SALVA O SERVE NO CAMPO CORRETO DO KIT
 
             if (id && tabelaAntiga) {
                 if (tabelaAntiga !== tabelaNova) {
