@@ -23,6 +23,7 @@ let promocoes = [];
 let carrinho = [];
 let produtoAtual = null;
 let qtdDetalhes = 1;
+let statusLoja = { manual: 'auto', aberto: false, mensagem: '' };
 
 // ============================================
 // FUNÇÃO AUXILIAR: IDENTIFICAR SE É KIT
@@ -77,7 +78,89 @@ window.verificarPagamento = function() {
     }
 }
 
+// ============================================
+// STATUS ABERTO / FECHADO (HÍBRIDO)
+// ============================================
+function calcularStatusAutomatico() {
+    const agora = new Date();
+    const opcoes = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', weekday: 'short', hour12: false };
+    const partes = new Intl.DateTimeFormat('pt-BR', opcoes).formatToParts(agora);
+    
+    let diaSemana = '';
+    let hora = 0;
+    let minuto = 0;
+    
+    partes.forEach(p => {
+        if (p.type === 'weekday') diaSemana = p.value.toLowerCase();
+        if (p.type === 'hour') hora = parseInt(p.value);
+        if (p.type === 'minute') minuto = parseInt(p.value);
+    });
+
+    const minutosAgora = hora * 60 + minuto;
+
+    // 08:00 = 480 min | 19:00 = 1140 min | 18:00 = 1080 min
+    let aberto = false;
+    let mensagem = '';
+
+    if (diaSemana.includes('seg') || diaSemana.includes('ter') || diaSemana.includes('qua') || diaSemana.includes('qui') || diaSemana.includes('sex')) {
+        aberto = minutosAgora >= 480 && minutosAgora < 1140;
+        if (aberto) mensagem = 'Aberto para pedidos';
+        else if (minutosAgora < 480) mensagem = 'Abre hoje às 08:00';
+        else mensagem = 'Fechado • Abre amanhã às 08:00';
+    } else if (diaSemana.includes('sáb') || diaSemana.includes('sab')) {
+        aberto = minutosAgora >= 480 && minutosAgora < 1080;
+        if (aberto) mensagem = 'Aberto para pedidos';
+        else if (minutosAgora < 480) mensagem = 'Abre hoje às 08:00';
+        else mensagem = 'Fechado • Abre segunda às 08:00';
+    } else {
+        aberto = false;
+        mensagem = 'Fechado • Abre segunda às 08:00';
+    }
+
+    return { aberto, mensagem };
+}
+
+function aplicarStatusNaTela() {
+    const el = document.getElementById('status-loja');
+    if (!el) return;
+
+    const auto = calcularStatusAutomatico();
+
+    if (statusLoja.manual === 'aberta') {
+        el.className = 'topo-status-fechado aberto';
+        el.innerHTML = `<i class="bi bi-check-circle-fill"></i> Aberto para pedidos`;
+        statusLoja.aberto = true;
+        statusLoja.mensagem = 'Aberto para pedidos';
+    } else if (statusLoja.manual === 'fechada') {
+        el.className = 'topo-status-fechado fechado';
+        el.innerHTML = `<i class="bi bi-x-circle-fill"></i> Fechado no momento`;
+        statusLoja.aberto = false;
+        statusLoja.mensagem = 'Fechado no momento';
+    } else {
+        // Automático
+        statusLoja.aberto = auto.aberto;
+        statusLoja.mensagem = auto.mensagem;
+        if (auto.aberto) {
+            el.className = 'topo-status-fechado aberto';
+            el.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${auto.mensagem}`;
+        } else {
+            el.className = 'topo-status-fechado fechado';
+            el.innerHTML = `<i class="bi bi-x-circle-fill"></i> ${auto.mensagem}`;
+        }
+    }
+}
+
+function ouvirStatusLoja() {
+    db.ref('config/lojaStatus').on('value', snap => {
+        const val = snap.val();
+        statusLoja.manual = val || 'auto';
+        aplicarStatusNaTela();
+    });
+}
+
+// ============================================
 // CARREGAR DADOS DO FIREBASE
+// ============================================
 function carregarDados() {
     db.ref('Category').once('value').then(snapCat => {
         categorias = [];
@@ -99,15 +182,15 @@ function carregarDados() {
         });
 
         return Promise.all([
-            db.ref('Foods').once('value'),
-            db.ref('FoodsC').once('value'),
-            db.ref('Promocoes').once('value') // NOVA TABELA
+            db.ref('Foods').once('value').catch(() => null),
+            db.ref('FoodsC').once('value').catch(() => null),
+            db.ref('Promocoes').once('value').catch(() => null)
         ]);
     }).then(([snapProd, snapProdC, snapPromo]) => {
         produtos = [];
         promocoes = [];
 
-        if (snapProd.exists()) {
+        if (snapProd && snapProd.exists()) {
             snapProd.forEach(p => {
                 const val = p.val();
                 if (val.name && val.menuId) {
@@ -129,7 +212,7 @@ function carregarDados() {
             });
         }
 
-        if (snapProdC.exists()) {
+        if (snapProdC && snapProdC.exists()) {
             snapProdC.forEach(p => {
                 const val = p.val();
                 if (val.nameC && val.menuId) {
@@ -151,15 +234,11 @@ function carregarDados() {
             });
         }
 
-        // CARREGAR PROMOÇÕES (APENAS IMAGEM)
-        if (snapPromo.exists()) {
+        if (snapPromo && snapPromo.exists()) {
             snapPromo.forEach(p => {
                 const val = p.val();
                 if (val.imagem) {
-                    promocoes.push({
-                        id: p.key,
-                        imagem: val.imagem
-                    });
+                    promocoes.push({ id: p.key, imagem: val.imagem });
                 }
             });
         }
@@ -170,7 +249,7 @@ function carregarDados() {
         carregarCarrinhoSalvo();
     }).catch(err => {
         console.error('Erro:', err);
-        document.getElementById('loading').innerHTML = '<div class="alert alert-danger">Erro ao carregar produtos.</div>';
+        document.getElementById('loading').innerHTML = '<div class="alert alert-danger text-center my-3">Erro ao carregar produtos. Verifique sua conexão.</div>';
     });
 }
 
@@ -187,13 +266,12 @@ function parsePreco(precoStr) {
     return { valor, unidade };
 }
 
-// RENDERIZAR NAVEGAÇÃO (ADICIONA "PROMOÇÃO" COMO PRIMEIRO CHIP)
+// RENDERIZAR NAVEGAÇÃO
 function renderizarNavCategorias() {
     const container = document.getElementById('categorias-scroll');
     if (!container) return;
     let html = '<button class="categoria-chip ativo" onclick="scrollParaCategoria(\'todos\', this)">Todos</button>';
     
-    // Adiciona "Promoção" como chip fixo antes das categorias
     if (promocoes.length > 0) {
         html += `<button class="categoria-chip" onclick="scrollParaCategoria('promocao', this)">🔥 Promoção</button>`;
     }
@@ -221,7 +299,6 @@ function renderizarProdutos(filtro = '') {
     let html = '';
     let total = 0;
 
-    // ============ SEÇÃO DE PROMOÇÃO ============
     if (promocoes.length > 0 && (termo === '' || termo.includes('promo'))) {
         html += `<section class="categoria-secao" id="secao-promocao">`;
         html += `<h2 class="categoria-titulo-promo"><i class="bi bi-fire"></i> Promoção</h2>`;
@@ -240,7 +317,6 @@ function renderizarProdutos(filtro = '') {
         total += promocoes.length;
     }
 
-    // ============ SEÇÕES DE PRODUTOS ============
     categorias.forEach(cat => {
         const produtosCat = produtos.filter(p => {
             const matchCat = p.menuId === cat.id;
@@ -303,20 +379,14 @@ window.filtrarProdutos = function() {
     renderizarProdutos(document.getElementById('busca').value);
 }
 
-// FUNÇÃO GLOBAL PARA CLICAR NO KIT
 window.clicarKit = function(id) {
-    console.log('clicarKit chamada com id:', id);
     window.abrirDetalhes(id);
 };
 
 // TELA DE DETALHES
 window.abrirDetalhes = function(id) {
-    console.log('abrirDetalhes chamada com id:', id);
     const prod = produtos.find(p => p.id === id);
-    if (!prod) {
-        console.error('Produto não encontrado para o id:', id);
-        return;
-    }
+    if (!prod) { console.error('Produto não encontrado:', id); return; }
 
     produtoAtual = prod;
     qtdDetalhes = 1;
@@ -351,27 +421,19 @@ window.fecharDetalhes = function() {
 }
 
 window.alterarQtdDetalhes = function(acao) {
-    if (acao === -1 && qtdDetalhes > 1) {
-        qtdDetalhes--;
-    } else if (acao === 1) {
-        qtdDetalhes++;
-    }
+    if (acao === -1 && qtdDetalhes > 1) qtdDetalhes--;
+    else if (acao === 1) qtdDetalhes++;
     document.getElementById('det-qtd-txt').textContent = qtdDetalhes;
 }
 
 window.toggleInfo = function(elementId) {
     const el = document.getElementById(elementId);
-    if (el.style.display === 'none') {
-        el.style.display = 'block';
-    } else {
-        el.style.display = 'none';
-    }
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-// LIGHTBOX (USADO TAMBÉM PARA AS PROMOÇÕES)
+// LIGHTBOX
 window.abrirLightbox = function(urlImagem) {
     let lightbox = document.getElementById('lightbox-modal');
-    
     if (!lightbox) {
         lightbox = document.createElement('div');
         lightbox.id = 'lightbox-modal';
@@ -379,18 +441,14 @@ window.abrirLightbox = function(urlImagem) {
         lightbox.innerHTML = `
             <button class="btn-fechar-lightbox" onclick="window.fecharLightbox()">&times;</button>
             <div class="lightbox-content" onclick="event.stopPropagation()">
-                <img id="lightbox-img" src="" alt="Zoom da Promoção">
+                <img id="lightbox-img" src="" alt="Zoom">
             </div>
         `;
         lightbox.onclick = function() { window.fecharLightbox(); };
         document.body.appendChild(lightbox);
     }
-
     document.getElementById('lightbox-img').src = urlImagem;
-    
-    setTimeout(() => {
-        lightbox.classList.add('show');
-    }, 10);
+    setTimeout(() => lightbox.classList.add('show'), 10);
 };
 
 window.fecharLightbox = function() {
@@ -398,7 +456,7 @@ window.fecharLightbox = function() {
     if (lightbox) lightbox.classList.remove('show');
 };
 
-// MODAL DE ADIÇÃO (CARRINHO)
+// MODAL DE ADIÇÃO
 window.abrirModalPeso = function(produtoId, qtdPreDefinida = null) {
     const prod = produtos.find(p => p.id === produtoId);
     if (!prod) return;
@@ -430,12 +488,7 @@ window.abrirModalPeso = function(produtoId, qtdPreDefinida = null) {
         document.getElementById('unidade-g').checked = true;
     }
 
-    if (qtdPreDefinida !== null) {
-        document.getElementById('modal-quantidade').value = qtdPreDefinida;
-    } else {
-        document.getElementById('modal-quantidade').value = '';
-    }
-
+    document.getElementById('modal-quantidade').value = qtdPreDefinida !== null ? qtdPreDefinida : '';
     document.getElementById('modal-observacao').value = '';
     document.getElementById('corte-inteiro').checked = true;
     
@@ -448,7 +501,6 @@ window.setQtd = function(valor) {
     const unidade = document.querySelector('input[name="unidade"]:checked')?.value || 'g';
     const input = document.getElementById('modal-quantidade');
     const isKit = ehKit(produtoAtual) || produtoAtual.unidade === 'un';
-    
     if (isKit) input.value = valor / 1000;
     else if (unidade === 'g') input.value = valor;
     else input.value = valor / 1000;
@@ -462,9 +514,7 @@ window.atualizarCalculo = function() {
     const isKit = ehKit(produtoAtual) || produtoAtual.unidade === 'un';
     const unidade = isKit ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
 
-    if (!isKit) {
-        labelQtd.textContent = unidade === 'g' ? 'Quantidade (g)' : 'Quantidade (kg)';
-    }
+    if (!isKit) labelQtd.textContent = unidade === 'g' ? 'Quantidade (g)' : 'Quantidade (kg)';
 
     const qtdDigitada = parseFloat(input.value) || 0;
     let quantidadeKg = isKit ? qtdDigitada : (unidade === 'g' ? qtdDigitada / 1000 : qtdDigitada);
@@ -477,10 +527,7 @@ window.confirmarAdicao = function() {
     const input = document.getElementById('modal-quantidade');
     const qtdDigitada = parseFloat(input.value) || 0;
 
-    if (qtdDigitada <= 0) {
-        alert('Informe uma quantidade válida.');
-        return;
-    }
+    if (qtdDigitada <= 0) { alert('Informe uma quantidade válida.'); return; }
 
     const isKit = ehKit(produtoAtual) || produtoAtual.unidade === 'un';
     const unidade = isKit ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
@@ -496,16 +543,10 @@ window.confirmarAdicao = function() {
     const observacao = document.getElementById('modal-observacao').value.trim();
 
     const item = {
-        id: produtoAtual.id,
-        nome: produtoAtual.nome,
-        imagem: produtoAtual.imagem,
-        precoKg: produtoAtual.precoNumerico,
-        unidade: unidade,
-        quantidadeKg: quantidadeKg,
-        quantidadeExibir: quantidadeExibir,
-        subtotal: subtotal,
-        tipoCorte: tipoCorte,
-        observacao: observacao
+        id: produtoAtual.id, nome: produtoAtual.nome, imagem: produtoAtual.imagem,
+        precoKg: produtoAtual.precoNumerico, unidade: unidade,
+        quantidadeKg: quantidadeKg, quantidadeExibir: quantidadeExibir,
+        subtotal: subtotal, tipoCorte: tipoCorte, observacao: observacao
     };
 
     carrinho.push(item);
@@ -519,12 +560,8 @@ window.confirmarAdicao = function() {
 function atualizarCarrinho() {
     const badge = document.getElementById('badge-carrinho');
     if (badge) {
-        if (carrinho.length > 0) {
-            badge.textContent = carrinho.length;
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
-        }
+        if (carrinho.length > 0) { badge.textContent = carrinho.length; badge.style.display = 'flex'; }
+        else badge.style.display = 'none';
     }
 
     const body = document.getElementById('carrinho-body');
@@ -589,19 +626,13 @@ function salvarCarrinho() {
 function carregarCarrinhoSalvo() {
     try {
         const salvo = localStorage.getItem('carrinho_hs');
-        if (salvo) {
-            carrinho = JSON.parse(salvo);
-            atualizarCarrinho();
-        }
+        if (salvo) { carrinho = JSON.parse(salvo); atualizarCarrinho(); }
     } catch (e) { carrinho = []; }
 }
 
 // MODAL DE ENDEREÇO
 window.abrirModalEndereco = function() {
-    if (carrinho.length === 0) {
-        alert('Seu carrinho está vazio!');
-        return;
-    }
+    if (carrinho.length === 0) { alert('Seu carrinho está vazio!'); return; }
     window.fecharCarrinho();
 
     const dadosSalvos = JSON.parse(localStorage.getItem('cliente_hs') || '{}');
@@ -619,6 +650,12 @@ window.abrirModalEndereco = function() {
 
 // ENVIAR PEDIDO WHATSAPP
 window.enviarPedidoWhatsApp = function() {
+    // Bloqueia se loja estiver fechada
+    if (!statusLoja.aberto) {
+        alert('A loja está fechada no momento. Volte no horário de funcionamento para fazer seu pedido.');
+        return;
+    }
+
     const nome = document.getElementById('cli-nome').value.trim();
     const rua = document.getElementById('cli-rua').value.trim();
     const numero = document.getElementById('cli-numero').value.trim();
@@ -636,7 +673,7 @@ window.enviarPedidoWhatsApp = function() {
     if (pagamento === 'Dinheiro' && trocoInput && troco > 0) {
         const totalCarrinho = carrinho.reduce((acc, item) => acc + item.subtotal, 0);
         if (troco < totalCarrinho) {
-            alert(`O valor do troco (R$ ${troco.toFixed(2)}) é menor que o total estimado do pedido (R$ ${totalCarrinho.toFixed(2)}).\nPor favor, corrija o valor.`);
+            alert(`O valor do troco (R$ ${troco.toFixed(2)}) é menor que o total estimado do pedido (R$ ${totalCarrinho.toFixed(2)}).`);
             return;
         }
     }
@@ -683,7 +720,7 @@ window.enviarPedidoWhatsApp = function() {
     window.open(url, '_blank');
 }
 
-// TOAST E INICIALIZAÇÃO
+// TOAST
 function mostrarToast(texto) {
     const toast = document.createElement('div');
     toast.style.cssText = `
@@ -701,8 +738,12 @@ function mostrarToast(texto) {
     }, 2500);
 }
 
+// INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', function() {
     carregarDados();
+    ouvirStatusLoja();
+    // Atualiza o status automático a cada 1 minuto
+    setInterval(aplicarStatusNaTela, 60000);
 
     const carousel = document.getElementById('bannerCarousel');
     const dots = document.querySelectorAll('.banner-dots .dot');
@@ -729,9 +770,7 @@ document.addEventListener('DOMContentLoaded', function() {
         carousel.addEventListener('scroll', () => {
             const itemWidth = items[0].offsetWidth + 15;
             const newIndex = Math.round(carousel.scrollLeft / itemWidth);
-            if (newIndex !== currentIndex && newIndex < items.length) {
-                updateDots(newIndex);
-            }
+            if (newIndex !== currentIndex && newIndex < items.length) updateDots(newIndex);
         });
 
         function startAutoScroll() {
@@ -741,12 +780,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 4000);
         }
 
-        function stopAutoScroll() {
-            clearInterval(autoScrollInterval);
-        }
+        function stopAutoScroll() { clearInterval(autoScrollInterval); }
 
         startAutoScroll();
-
         carousel.addEventListener('touchstart', stopAutoScroll, { passive: true });
         carousel.addEventListener('mousedown', stopAutoScroll);
         carousel.addEventListener('touchend', () => { setTimeout(startAutoScroll, 5000); });

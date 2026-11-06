@@ -50,6 +50,66 @@
         .badge-esgotado { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; }
         .badge-kit { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; background: #0d6efd; color: white; }
         .badge-promo { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; background: #ff9800; color: white; }
+        .progresso { height: 6px; background: #eee; border-radius: 3px; overflow: hidden; margin-top: 5px; display: none; }
+        .progresso-bar { height: 100%; background: var(--vermelho); width: 0%; transition: width 0.3s; }
+
+        /* PAINEL DE STATUS */
+        .painel-status {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .painel-status.aberto { border-color: #1a7f37; background: linear-gradient(135deg, #f0fff4 0%, #fff 100%); }
+        .painel-status.fechado { border-color: var(--vermelho); background: linear-gradient(135deg, #fff5f5 0%, #fff 100%); }
+        .painel-status.auto { border-color: #ffc107; background: linear-gradient(135deg, #fffbf0 0%, #fff 100%); }
+
+        .painel-status h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0 0 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .painel-status .status-atual {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        .painel-status .botoes-status {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .painel-status .botoes-status button {
+            flex: 1;
+            min-width: 100px;
+            border: 2px solid #ddd;
+            background: #fff;
+            border-radius: 10px;
+            padding: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #555;
+        }
+        .painel-status .botoes-status button:hover {
+            border-color: #999;
+        }
+        .painel-status .botoes-status button.ativo {
+            background: var(--escuro);
+            color: #fff;
+            border-color: var(--escuro);
+        }
+        .painel-status .botoes-status button.ativo.aberto { background: #1a7f37; border-color: #1a7f37; }
+        .painel-status .botoes-status button.ativo.fechado { background: var(--vermelho); border-color: var(--vermelho); }
+        .painel-status .botoes-status button.ativo.auto { background: #ffc107; border-color: #ffc107; color: #222; }
     </style>
 </head>
 <body>
@@ -58,20 +118,40 @@
         <div class="login-box">
             <img src="casadecarnehs.png" alt="Logo">
             <h4 class="mb-3">Área Restrita</h4>
-            <p class="text-muted small">Digite a senha para gerenciar o cardápio.</p>
-            <input type="password" id="senha-admin" class="form-control form-control-lg mb-3 text-center" placeholder="Senha">
-            <button class="btn btn-danger w-100 fw-bold" onclick="verificarSenha()">Entrar no Painel</button>
-            <p id="erro-senha" class="text-danger small mt-2 d-none">Senha incorreta!</p>
+            <p class="text-muted small">Faça login para gerenciar o cardápio.</p>
+            
+            <input type="email" id="login-email" class="form-control form-control-lg mb-2 text-center" placeholder="E-mail" value="admin@casadecarnehs.com">
+            <input type="password" id="login-senha" class="form-control form-control-lg mb-3 text-center" placeholder="Senha">
+            
+            <button class="btn btn-danger w-100 fw-bold" onclick="fazerLogin()">Entrar no Painel</button>
+            <p id="erro-login" class="text-danger small mt-2 d-none">E-mail ou senha incorretos!</p>
         </div>
     </div>
 
     <div id="painel-admin" class="d-none">
         <div class="header-admin">
             <h2><i class="bi bi-gear-fill"></i> Painel de Controle H&S</h2>
+            <button class="btn btn-sm btn-outline-light mt-2" onclick="fazerLogout()"><i class="bi bi-box-arrow-right"></i> Sair</button>
         </div>
 
         <div class="container">
-            <!-- ABAS -->
+            <!-- PAINEL DE STATUS -->
+            <div class="painel-status auto" id="painel-status">
+                <h4 id="status-titulo"><i class="bi bi-clock-history"></i> Status da Loja</h4>
+                <p class="status-atual" id="status-subtitulo">Modo automático • Respeita os horários de funcionamento</p>
+                <div class="botoes-status">
+                    <button id="btn-status-auto" onclick="mudarStatus('auto')">
+                        <i class="bi bi-clock"></i> Automático
+                    </button>
+                    <button id="btn-status-aberta" onclick="mudarStatus('aberta')">
+                        <i class="bi bi-check-circle"></i> Forçar Aberto
+                    </button>
+                    <button id="btn-status-fechada" onclick="mudarStatus('fechada')">
+                        <i class="bi bi-x-circle"></i> Forçar Fechado
+                    </button>
+                </div>
+            </div>
+
             <div class="abas-admin">
                 <button class="aba-admin-btn ativo" onclick="mudarAbaAdmin('produtos', this)">
                     <i class="bi bi-box-seam"></i> Produtos
@@ -81,7 +161,6 @@
                 </button>
             </div>
 
-            <!-- ============ ABA PRODUTOS ============ -->
             <div id="aba-produtos">
                 <div class="ferramentas-admin">
                     <div class="busca-admin">
@@ -91,9 +170,7 @@
                     <div class="filtros-categorias" id="filtros-categorias"></div>
                     <div class="form-check form-switch mt-2 mb-0">
                         <input class="form-check-input" type="checkbox" id="filtro-esgotados" onchange="filtrarAdmin()">
-                        <label class="form-check-label small fw-bold" for="filtro-esgotados">
-                            Mostrar apenas produtos esgotados
-                        </label>
+                        <label class="form-check-label small fw-bold" for="filtro-esgotados">Mostrar apenas produtos esgotados</label>
                     </div>
                 </div>
 
@@ -107,7 +184,6 @@
                 <div id="lista-admin"></div>
             </div>
 
-            <!-- ============ ABA PROMOÇÕES ============ -->
             <div id="aba-promocoes" class="d-none">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0 fw-bold text-dark">Promoções</h5>
@@ -115,7 +191,6 @@
                         <i class="bi bi-plus-lg"></i> Nova Promoção
                     </button>
                 </div>
-
                 <div id="lista-promocoes"></div>
             </div>
         </div>
@@ -157,15 +232,17 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Foto do Produto</label>
                         <input type="file" id="edit-file" class="form-control mb-2" accept="image/*" onchange="previewImagem(event)">
+                        <div class="progresso" id="edit-progresso"><div class="progresso-bar" id="edit-progresso-bar"></div></div>
                         <div id="preview-container">
                             <img id="img-preview" class="img-preview" src="" alt="Prévia da imagem" style="display: none;">
                             <div id="no-img-text" class="img-preview">Nenhuma imagem selecionada</div>
                         </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">A imagem será enviada ao Firebase Storage.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger fw-bold" onclick="salvarProduto()">Salvar</button>
+                    <button type="button" class="btn btn-danger fw-bold" id="btn-salvar-produto" onclick="salvarProduto()">Salvar</button>
                 </div>
             </div>
         </div>
@@ -186,16 +263,17 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Arte da Promoção</label>
                         <input type="file" id="promo-file" class="form-control mb-2" accept="image/*" onchange="previewImagemPromo(event)">
+                        <div class="progresso" id="promo-progresso"><div class="progresso-bar" id="promo-progresso-bar"></div></div>
                         <div id="preview-promo-container">
                             <img id="promo-preview" class="img-preview" src="" alt="Prévia" style="display: none;">
                             <div id="promo-no-img-text" class="img-preview">Nenhuma imagem selecionada</div>
                         </div>
-                        <small class="text-muted" style="font-size: 0.7rem;">Envie a arte da promoção (imagem pronta).</small>
+                        <small class="text-muted" style="font-size: 0.7rem;">A arte será enviada ao Firebase Storage.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-warning fw-bold text-dark" onclick="salvarPromo()">Salvar Promoção</button>
+                    <button type="button" class="btn btn-warning fw-bold text-dark" id="btn-salvar-promo" onclick="salvarPromo()">Salvar Promoção</button>
                 </div>
             </div>
         </div>
@@ -203,11 +281,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     
     <script>
-        const SENHA_ADMIN = "1234"; 
-
         const firebaseConfig = {
           apiKey: "AIzaSyAgUXojOAljeRudGNRF9rcvAJ4CNJSVF-s",
           authDomain: "fir-aluguel2.firebaseapp.com",
@@ -219,30 +297,124 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
+        const storage = firebase.storage();
 
         let categoriasGlobais = [];
         let produtosGlobais = [];
         let promocoesGlobais = [];
         let filtroAtual = 'todos';
 
-        function verificarSenha() {
-            const senha = document.getElementById('senha-admin').value;
-            if (senha === SENHA_ADMIN) {
+        // ============================================
+        // LOGIN / LOGOUT
+        // ============================================
+        function fazerLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const senha = document.getElementById('login-senha').value;
+            if (!email || !senha) { alert('Preencha e-mail e senha.'); return; }
+
+            auth.signInWithEmailAndPassword(email, senha)
+                .then(() => document.getElementById('erro-login').classList.add('d-none'))
+                .catch((error) => {
+                    console.error('Erro no login:', error);
+                    document.getElementById('erro-login').classList.remove('d-none');
+                });
+        }
+
+        function fazerLogout() {
+            auth.signOut().then(() => window.location.reload());
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
                 document.getElementById('tela-login').classList.add('d-none');
                 document.getElementById('painel-admin').classList.remove('d-none');
                 carregarDadosAdmin();
+                ouvirStatusAdmin();
             } else {
-                document.getElementById('erro-senha').classList.remove('d-none');
+                document.getElementById('tela-login').classList.remove('d-none');
+                document.getElementById('painel-admin').classList.add('d-none');
+            }
+        });
+
+        // ============================================
+        // STATUS DA LOJA
+        // ============================================
+        function ouvirStatusAdmin() {
+            db.ref('config/lojaStatus').on('value', snap => {
+                const val = snap.val() || 'auto';
+                atualizarPainelStatus(val);
+            });
+        }
+
+        function atualizarPainelStatus(valor) {
+            const painel = document.getElementById('painel-status');
+            const titulo = document.getElementById('status-titulo');
+            const subtitulo = document.getElementById('status-subtitulo');
+
+            // Remove todas as classes de estado
+            painel.classList.remove('aberto', 'fechado', 'auto');
+
+            // Remove ativo de todos os botões
+            document.querySelectorAll('.botoes-status button').forEach(b => b.classList.remove('ativo', 'aberto', 'fechado', 'auto'));
+
+            if (valor === 'aberta') {
+                painel.classList.add('aberto');
+                titulo.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#1a7f37"></i> Loja Aberta (Manual)';
+                subtitulo.textContent = 'Forçada aberta • Ignorando horário de funcionamento';
+                const btn = document.getElementById('btn-status-aberta');
+                btn.classList.add('ativo', 'aberto');
+            } else if (valor === 'fechada') {
+                painel.classList.add('fechado');
+                titulo.innerHTML = '<i class="bi bi-x-circle-fill" style="color:var(--vermelho)"></i> Loja Fechada (Manual)';
+                subtitulo.textContent = 'Forçada fechada • Ignorando horário de funcionamento';
+                const btn = document.getElementById('btn-status-fechada');
+                btn.classList.add('ativo', 'fechado');
+            } else {
+                painel.classList.add('auto');
+                titulo.innerHTML = '<i class="bi bi-clock-history" style="color:#ffc107"></i> Status Automático';
+                subtitulo.textContent = 'Respeita os horários: Seg-Sex 08-19h | Sáb 08-18h | Dom fechado';
+                const btn = document.getElementById('btn-status-auto');
+                btn.classList.add('ativo', 'auto');
             }
         }
 
+        function mudarStatus(valor) {
+            const nomes = { auto: 'Automático', aberta: 'Forçar Aberto', fechada: 'Forçar Fechado' };
+            if (!confirm(`Confirmar mudança para: ${nomes[valor]}?`)) return;
+
+            db.ref('config/lojaStatus').set(valor)
+                .then(() => {
+                    // Toast rápido
+                    const toast = document.createElement('div');
+                    toast.style.cssText = `
+                        position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+                        background: #25D366; color: #fff; padding: 12px 24px; border-radius: 30px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: 600;
+                        font-size: 0.9rem; transition: transform 0.3s ease; white-space: nowrap;
+                    `;
+                    toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> Status atualizado: ${nomes[valor]}`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.style.transform = 'translateX(-50%) translateY(20px)', 10);
+                    setTimeout(() => {
+                        toast.style.transform = 'translateX(-50%) translateY(-100px)';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Erro ao atualizar o status. Verifique as regras do Firebase.');
+                });
+        }
+
+        // ============================================
+        // ABAS
+        // ============================================
         function mudarAbaAdmin(aba, btn) {
             document.querySelectorAll('.aba-admin-btn').forEach(b => b.classList.remove('ativo'));
             btn.classList.add('ativo');
-
             document.getElementById('aba-produtos').classList.add('d-none');
             document.getElementById('aba-promocoes').classList.add('d-none');
-
             if (aba === 'produtos') {
                 document.getElementById('aba-produtos').classList.remove('d-none');
             } else {
@@ -251,18 +423,18 @@
             }
         }
 
+        // ============================================
+        // PRODUTOS
+        // ============================================
         function carregarDadosAdmin() {
             db.ref('Category').once('value').then(snapCat => {
                 categoriasGlobais = [];
                 if (snapCat.exists()) {
                     snapCat.forEach(c => {
                         const val = c.val();
-                        if (val && val.name) {
-                            categoriasGlobais.push({ id: c.key, nome: val.name });
-                        }
+                        if (val && val.name) categoriasGlobais.push({ id: c.key, nome: val.name });
                     });
                 }
-                
                 categoriasGlobais.sort((a, b) => a.nome.localeCompare(b.nome));
 
                 let selectHtml = '';
@@ -285,14 +457,9 @@
                         const val = p.val();
                         if(val.name) {
                             produtosGlobais.push({
-                                id: p.key,
-                                nome: val.name,
-                                preco: val.price,
-                                imagem: val.image,
-                                menuId: val.menuId,
-                                disponivel: val.disponivel !== false,
-                                tabela: 'Foods',
-                                serve: val.serve || ''
+                                id: p.key, nome: val.name, preco: val.price, imagem: val.image,
+                                menuId: val.menuId, disponivel: val.disponivel !== false,
+                                tabela: 'Foods', serve: val.serve || ''
                             });
                         }
                     });
@@ -303,14 +470,9 @@
                         const val = p.val();
                         if(val.nameC) {
                             produtosGlobais.push({
-                                id: p.key,
-                                nome: val.nameC,
-                                preco: val.priceC,
-                                imagem: val.imageC,
-                                menuId: val.menuId,
-                                disponivel: val.disponivel !== false,
-                                tabela: 'FoodsC',
-                                serve: val.serveC || ''
+                                id: p.key, nome: val.nameC, preco: val.priceC, imagem: val.imageC,
+                                menuId: val.menuId, disponivel: val.disponivel !== false,
+                                tabela: 'FoodsC', serve: val.serveC || ''
                             });
                         }
                     });
@@ -319,7 +481,7 @@
                 filtrarAdmin(); 
             }).catch(err => {
                 console.error("Erro:", err);
-                alert("Erro ao carregar os dados. Verifique as regras do Firebase.");
+                alert("Erro ao carregar os dados. Verifique suas permissões.");
             });
         }
 
@@ -336,7 +498,6 @@
             filtroAtual = id;
             document.querySelectorAll('.filtro-chip').forEach(b => b.classList.remove('ativo'));
             if (btn) btn.classList.add('ativo');
-            
             if(id === 'todos') document.getElementById('titulo-lista').innerText = "Todos os Produtos";
             else {
                 const cat = categoriasGlobais.find(c => c.id === id);
@@ -348,7 +509,6 @@
         function filtrarAdmin() {
             const termo = document.getElementById('busca-admin').value.toLowerCase().trim();
             const soEsgotados = document.getElementById('filtro-esgotados').checked;
-            
             const filtrados = produtosGlobais.filter(p => {
                 const matchBusca = p.nome.toLowerCase().includes(termo);
                 const matchCategoria = filtroAtual === 'todos' || p.menuId === filtroAtual;
@@ -370,7 +530,6 @@
             lista.forEach(p => {
                 const disponivel = p.disponivel !== false;
                 const isKit = p.tabela === 'FoodsC';
-                
                 const badgeEsgotado = !disponivel ? `<span class="badge bg-secondary badge-esgotado">ESGOTADO</span>` : '';
                 const badgeKit = isKit ? `<span class="badge badge-kit">KIT</span>` : '';
                 
@@ -403,7 +562,6 @@
             const novoStatus = !estaDisponivel;
             const acao = novoStatus ? 'reativar este produto' : 'marcar como ESGOTADO';
             if (!confirm(`Deseja ${acao}?`)) return;
-            
             db.ref(tabela + '/' + id).update({ disponivel: novoStatus })
                 .then(() => {
                     const prod = produtosGlobais.find(p => p.id === id && p.tabela === tabela);
@@ -413,33 +571,54 @@
                 .catch(err => { console.error(err); alert('Erro ao atualizar.'); });
         }
 
+        // ============================================
+        // UPLOAD DE IMAGEM
+        // ============================================
+        function fazerUploadImagem(file, pasta, onProgresso) {
+            return new Promise((resolve, reject) => {
+                const extensao = file.name.split('.').pop().toLowerCase() || 'jpg';
+                const nomeArquivo = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extensao}`;
+                const caminho = `${pasta}/${nomeArquivo}`;
+                const ref = storage.ref().child(caminho);
+                const uploadTask = ref.put(file);
+
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        if (onProgresso) onProgresso(pct);
+                    },
+                    (error) => { console.error('Erro no upload:', error); reject(error); },
+                    () => { uploadTask.snapshot.ref.getDownloadURL().then((url) => resolve(url)); }
+                );
+            });
+        }
+
         function previewImagem(event) {
             const file = event.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 600; 
-                    let width = img.width, height = img.height;
-                    if (width > MAX_WIDTH) {
-                        height = Math.round((height * MAX_WIDTH) / width);
-                        width = MAX_WIDTH;
-                    }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const base64 = canvas.toDataURL('image/jpeg', 0.7);
-                    
-                    document.getElementById('edit-imagem-base64').value = base64;
-                    document.getElementById('img-preview').src = base64;
-                    document.getElementById('img-preview').style.display = 'block';
-                    document.getElementById('no-img-text').style.display = 'none';
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Imagem muito grande. Use uma imagem menor que 5 MB.');
+                event.target.value = '';
+                return;
+            }
+            const url = URL.createObjectURL(file);
+            document.getElementById('img-preview').src = url;
+            document.getElementById('img-preview').style.display = 'block';
+            document.getElementById('no-img-text').style.display = 'none';
+        }
+
+        function previewImagemPromo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Imagem muito grande. Use uma imagem menor que 5 MB.');
+                event.target.value = '';
+                return;
+            }
+            const url = URL.createObjectURL(file);
+            document.getElementById('promo-preview').src = url;
+            document.getElementById('promo-preview').style.display = 'block';
+            document.getElementById('promo-no-img-text').style.display = 'none';
         }
 
         function abrirNovoProduto() {
@@ -449,11 +628,11 @@
             document.getElementById('edit-nome').value = '';
             document.getElementById('edit-preco').value = '';
             document.getElementById('edit-serve').value = '';
-            document.getElementById('edit-imagem-base64').value = '';
             document.getElementById('edit-file').value = '';
             document.getElementById('img-preview').src = '';
             document.getElementById('img-preview').style.display = 'none';
             document.getElementById('no-img-text').style.display = 'flex';
+            document.getElementById('edit-progresso').style.display = 'none';
             
             const select = document.getElementById('edit-categoria');
             if (select.options.length > 0) select.selectedIndex = 0;
@@ -472,7 +651,6 @@
             document.getElementById('edit-preco').value = p.preco;
             document.getElementById('edit-serve').value = p.serve || '';
             document.getElementById('edit-categoria').value = p.menuId;
-            document.getElementById('edit-imagem-base64').value = p.imagem;
             
             if (p.imagem) {
                 document.getElementById('img-preview').src = p.imagem;
@@ -483,48 +661,70 @@
                 document.getElementById('no-img-text').style.display = 'flex';
             }
             document.getElementById('edit-file').value = '';
+            document.getElementById('edit-progresso').style.display = 'none';
             new bootstrap.Modal(document.getElementById('modalEditar')).show();
         }
 
-        function salvarProduto() {
+        async function salvarProduto() {
             const id = document.getElementById('edit-id').value;
             const tabelaAntiga = document.getElementById('edit-tabela').value;
             const nome = document.getElementById('edit-nome').value;
             const preco = document.getElementById('edit-preco').value;
             const serve = document.getElementById('edit-serve').value;
-            const imagem = document.getElementById('edit-imagem-base64').value;
-            
-            const selectCat = document.getElementById('edit-categoria');
-            const categoria = selectCat.value;
+            const categoria = document.getElementById('edit-categoria').value;
             const tabelaNova = tabelaAntiga === 'FoodsC' ? 'FoodsC' : 'Foods';
+            const btnSalvar = document.getElementById('btn-salvar-produto');
 
             if (!nome || !preco) { alert("Preencha o nome e o preço!"); return; }
 
-            const dados = tabelaNova === 'Foods' 
-                ? { name: nome, price: preco, image: imagem, menuId: categoria, description: "", discount: "", validadeFim: "", validadeInicio: "", serve: serve }
-                : { nameC: nome, priceC: preco, imageC: imagem, menuId: categoria, serveC: serve };
+            let imagemFinal = '';
+            const file = document.getElementById('edit-file').files[0];
 
-            if (id && tabelaAntiga) {
-                if (tabelaAntiga !== tabelaNova) {
-                    db.ref(tabelaAntiga + '/' + id).remove().then(() => {
-                        dados.disponivel = true;
-                        db.ref(tabelaNova).push(dados).then(() => finalizarSalvar());
+            btnSalvar.disabled = true;
+            btnSalvar.innerText = 'Salvando...';
+
+            try {
+                if (file) {
+                    document.getElementById('edit-progresso').style.display = 'block';
+                    imagemFinal = await fazerUploadImagem(file, 'produtos', (pct) => {
+                        document.getElementById('edit-progresso-bar').style.width = pct + '%';
                     });
-                } else {
+                } else if (id) {
                     const prodAtual = produtosGlobais.find(p => p.id === id && p.tabela === tabelaAntiga);
-                    dados.disponivel = prodAtual ? (prodAtual.disponivel !== false) : true;
-                    db.ref(tabelaAntiga + '/' + id).update(dados).then(() => finalizarSalvar());
+                    imagemFinal = prodAtual ? prodAtual.imagem : '';
                 }
-            } else {
-                dados.disponivel = true;
-                db.ref(tabelaNova).push(dados).then(() => finalizarSalvar());
-            }
-        }
 
-        function finalizarSalvar() {
-            alert("Produto salvo com sucesso!");
-            bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
-            carregarDadosAdmin();
+                const dados = tabelaNova === 'Foods' 
+                    ? { name: nome, price: preco, image: imagemFinal, menuId: categoria, description: "", discount: "", validadeFim: "", validadeInicio: "", serve: serve }
+                    : { nameC: nome, priceC: preco, imageC: imagemFinal, menuId: categoria, serveC: serve };
+
+                if (id && tabelaAntiga) {
+                    if (tabelaAntiga !== tabelaNova) {
+                        await db.ref(tabelaAntiga + '/' + id).remove();
+                        dados.disponivel = true;
+                        await db.ref(tabelaNova).push(dados);
+                    } else {
+                        const prodAtual = produtosGlobais.find(p => p.id === id && p.tabela === tabelaAntiga);
+                        dados.disponivel = prodAtual ? (prodAtual.disponivel !== false) : true;
+                        await db.ref(tabelaAntiga + '/' + id).update(dados);
+                    }
+                } else {
+                    dados.disponivel = true;
+                    await db.ref(tabelaNova).push(dados);
+                }
+
+                alert("Produto salvo com sucesso!");
+                bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
+                carregarDadosAdmin();
+            } catch (err) {
+                console.error('Erro ao salvar produto:', err);
+                alert('Erro ao salvar: ' + (err.message || 'verifique sua conexão.'));
+            } finally {
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = 'Salvar';
+                document.getElementById('edit-progresso').style.display = 'none';
+                document.getElementById('edit-progresso-bar').style.width = '0%';
+            }
         }
 
         function excluirProduto(id, tabela) {
@@ -533,18 +733,16 @@
             }
         }
 
-        /* ============================================
-           PROMOÇÕES
-           ============================================ */
+        // ============================================
+        // PROMOÇÕES
+        // ============================================
         function carregarPromocoes() {
             db.ref('Promocoes').once('value').then(snap => {
                 promocoesGlobais = [];
                 if (snap.exists()) {
                     snap.forEach(p => {
                         const val = p.val();
-                        if (val.imagem) {
-                            promocoesGlobais.push({ id: p.key, imagem: val.imagem });
-                        }
+                        if (val.imagem) promocoesGlobais.push({ id: p.key, imagem: val.imagem });
                     });
                 }
                 renderizarListaPromocoes();
@@ -579,43 +777,14 @@
             container.innerHTML = html;
         }
 
-        function previewImagemPromo(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 900; 
-                    let width = img.width, height = img.height;
-                    if (width > MAX_WIDTH) {
-                        height = Math.round((height * MAX_WIDTH) / width);
-                        width = MAX_WIDTH;
-                    }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    document.getElementById('promo-imagem-base64').value = base64;
-                    document.getElementById('promo-preview').src = base64;
-                    document.getElementById('promo-preview').style.display = 'block';
-                    document.getElementById('promo-no-img-text').style.display = 'none';
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
         function abrirNovaPromo() {
             document.getElementById('titulo-modal-promo').innerText = "Nova Promoção";
             document.getElementById('promo-id').value = '';
-            document.getElementById('promo-imagem-base64').value = '';
             document.getElementById('promo-file').value = '';
             document.getElementById('promo-preview').src = '';
             document.getElementById('promo-preview').style.display = 'none';
             document.getElementById('promo-no-img-text').style.display = 'flex';
+            document.getElementById('promo-progresso').style.display = 'none';
             new bootstrap.Modal(document.getElementById('modalPromo')).show();
         }
 
@@ -625,33 +794,56 @@
 
             document.getElementById('titulo-modal-promo').innerText = "Editar Promoção";
             document.getElementById('promo-id').value = p.id;
-            document.getElementById('promo-imagem-base64').value = p.imagem;
             document.getElementById('promo-preview').src = p.imagem;
             document.getElementById('promo-preview').style.display = 'block';
             document.getElementById('promo-no-img-text').style.display = 'none';
             document.getElementById('promo-file').value = '';
+            document.getElementById('promo-progresso').style.display = 'none';
             new bootstrap.Modal(document.getElementById('modalPromo')).show();
         }
 
-        function salvarPromo() {
+        async function salvarPromo() {
             const id = document.getElementById('promo-id').value;
-            const imagem = document.getElementById('promo-imagem-base64').value;
+            const file = document.getElementById('promo-file').files[0];
+            const btnSalvar = document.getElementById('btn-salvar-promo');
 
-            if (!imagem) { alert("Envie uma imagem para a promoção!"); return; }
+            if (!file && !id) { alert("Envie uma imagem para a promoção!"); return; }
 
-            const dados = { imagem: imagem };
+            btnSalvar.disabled = true;
+            btnSalvar.innerText = 'Salvando...';
 
-            if (id) {
-                db.ref('Promocoes/' + id).update(dados).then(() => finalizarSalvarPromo());
-            } else {
-                db.ref('Promocoes').push(dados).then(() => finalizarSalvarPromo());
+            try {
+                let imagemFinal = '';
+                if (file) {
+                    document.getElementById('promo-progresso').style.display = 'block';
+                    imagemFinal = await fazerUploadImagem(file, 'promocoes', (pct) => {
+                        document.getElementById('promo-progresso-bar').style.width = pct + '%';
+                    });
+                } else {
+                    const promoAtual = promocoesGlobais.find(p => p.id === id);
+                    imagemFinal = promoAtual ? promoAtual.imagem : '';
+                }
+
+                const dados = { imagem: imagemFinal };
+
+                if (id) {
+                    await db.ref('Promocoes/' + id).update(dados);
+                } else {
+                    await db.ref('Promocoes').push(dados);
+                }
+
+                alert("Promoção salva com sucesso!");
+                bootstrap.Modal.getInstance(document.getElementById('modalPromo')).hide();
+                carregarPromocoes();
+            } catch (err) {
+                console.error('Erro ao salvar promoção:', err);
+                alert('Erro ao salvar: ' + (err.message || 'verifique sua conexão.'));
+            } finally {
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = 'Salvar Promoção';
+                document.getElementById('promo-progresso').style.display = 'none';
+                document.getElementById('promo-progresso-bar').style.width = '0%';
             }
-        }
-
-        function finalizarSalvarPromo() {
-            alert("Promoção salva com sucesso!");
-            bootstrap.Modal.getInstance(document.getElementById('modalPromo')).hide();
-            carregarPromocoes();
         }
 
         function excluirPromo(id) {

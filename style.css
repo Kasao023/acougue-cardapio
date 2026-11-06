@@ -20,7 +20,65 @@ body {
     padding-bottom: 75px;
 }
 
-/* ============ TELA INICIAL (CAPA) ============ */
+/* ========================================================= */
+/* ============ SKELETON LOADING =========================== */
+/* ========================================================= */
+.skeleton-container {
+    padding: 0 0 20px;
+}
+
+.skeleton-categoria {
+    width: 140px;
+    height: 18px;
+    background: #e6e8eb;
+    border-radius: 6px;
+    margin: 20px 0 12px;
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-produto {
+    display: flex;
+    gap: 15px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--cinza-borda);
+}
+
+.skeleton-img {
+    width: 90px;
+    height: 90px;
+    background: #e6e8eb;
+    border-radius: 10px;
+    flex-shrink: 0;
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+}
+
+.skeleton-linha {
+    height: 14px;
+    background: #e6e8eb;
+    border-radius: 6px;
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-linha.w-75 { width: 75%; }
+.skeleton-linha.w-50 { width: 50%; }
+.skeleton-linha.w-25 { width: 25%; }
+
+@keyframes skeleton-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* ========================================================= */
+/* ============ TELA INICIAL (CAPA) ======================== */
+/* ========================================================= */
 .tela-home {
     position: fixed; inset: 0;
     background: linear-gradient(135deg, #2a2a2a 0%, #111111 100%);
@@ -141,6 +199,22 @@ body {
     margin-top: 15px;
     margin-left: -15px;
     margin-right: -15px;
+    transition: background 0.3s;
+}
+
+/* STATUS ABERTO / FECHADO */
+.topo-status-fechado.aberto {
+    background: #1a7f37;
+    color: #fff;
+}
+
+.topo-status-fechado.fechado {
+    background: var(--vermelho);
+    color: #fff;
+}
+
+.topo-status-fechado i {
+    margin-right: 5px;
 }
 
 /* ============ BARRA DE PESQUISA ============ */
@@ -299,6 +373,11 @@ body {
     background: #fff;
     position: relative;
     cursor: pointer;
+    transition: background 0.2s;
+}
+
+.produto-card.kit-card:active {
+    background: #fafafa;
 }
 
 .produto-card.kit-card .produto-imagem {
@@ -662,4 +741,34 @@ body {
     height: 140px;
     display: block;
     object-fit: cover;
+}
+
+/* ========================================================= */
+/* ============ FEEDBACK VISUAL NOS BOTÕES ================= */
+/* ========================================================= */
+
+#btn-confirmar-adicao {
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+#btn-confirmar-adicao:disabled {
+    cursor: not-allowed;
+    opacity: 0.9;
+}
+
+.btn-adicionar.adicionado {
+    background: #25D366 !important;
+    color: #fff !important;
+    border-color: #25D366 !important;
+    transform: scale(0.95);
+}
+
+.btn-adicionar.adicionado i {
+    animation: check-bounce 0.4s ease;
+}
+
+@keyframes check-bounce {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
 }

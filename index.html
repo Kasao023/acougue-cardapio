@@ -56,10 +56,11 @@
             <div class="topo-avaliacao">
                 <i class="bi bi-star-fill text-warning"></i> <strong>5.0</strong> <span class="text-muted">(4105 avaliações)</span>
             </div>
-            <p class="text-muted small mb-0 mt-1">Pedido mínimo R$ 0,00</p>
+            <p class="text-muted small mb-0 mt-1">O melhor da cidade</p>
             
-            <div class="topo-status-fechado">
-                Aberto para pedidos
+            <!-- STATUS DINÂMICO -->
+            <div class="topo-status-fechado" id="status-loja">
+                <i class="bi bi-clock"></i> Verificando horário...
             </div>
         </div>
 
@@ -73,7 +74,7 @@
         <div class="banner-scroll-container mt-3">
             <div class="banner-scroll" id="bannerCarousel">
                 <div class="banner-item">
-                    <img src="banner-kg.jpg" alt="Aviso: Carnes vendidas por KG" onerror="this.onerror=null; this.src='banner-kg.jpeg'; this.onerror=function(){this.src='banner-kg.png';};">
+                    <img src="banner-kg.jpg" alt="Aviso: Carnes vendidas por KG" onerror="this.onerror=null; this.src='banner-kg.jpeg'; this.onerror=function(){this.src='banner-kg.png';}">
                 </div>
                 <div class="banner-item">
                     <img src="banner-mapa.jpg" alt="Aviso: Unidades" onerror="this.onerror=null; this.src='banner-mapa.jpeg'; this.onerror=function(){this.src='banner-mapa.png';}">
@@ -92,9 +93,50 @@
         </nav>
 
         <main class="container my-4 main-content">
-            <div id="loading" class="text-center py-5">
-                <div class="spinner-border text-danger" role="status"></div>
-                <p class="mt-3 text-muted">Carregando produtos...</p>
+            <!-- SKELETON LOADING -->
+            <div id="loading" class="skeleton-container">
+                <div class="skeleton-categoria"></div>
+                <div class="skeleton-produto">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-info">
+                        <div class="skeleton-linha w-75"></div>
+                        <div class="skeleton-linha w-50"></div>
+                        <div class="skeleton-linha w-25"></div>
+                    </div>
+                </div>
+                <div class="skeleton-produto">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-info">
+                        <div class="skeleton-linha w-75"></div>
+                        <div class="skeleton-linha w-50"></div>
+                        <div class="skeleton-linha w-25"></div>
+                    </div>
+                </div>
+                <div class="skeleton-produto">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-info">
+                        <div class="skeleton-linha w-75"></div>
+                        <div class="skeleton-linha w-50"></div>
+                        <div class="skeleton-linha w-25"></div>
+                    </div>
+                </div>
+                <div class="skeleton-categoria"></div>
+                <div class="skeleton-produto">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-info">
+                        <div class="skeleton-linha w-75"></div>
+                        <div class="skeleton-linha w-50"></div>
+                        <div class="skeleton-linha w-25"></div>
+                    </div>
+                </div>
+                <div class="skeleton-produto">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-info">
+                        <div class="skeleton-linha w-75"></div>
+                        <div class="skeleton-linha w-50"></div>
+                        <div class="skeleton-linha w-25"></div>
+                    </div>
+                </div>
             </div>
             <div id="produtos-container"></div>
         </main>
@@ -175,7 +217,7 @@
         </div>
     </div>
 
-    <!-- MODAL DETALHES DO KIT (REFORMULADO) -->
+    <!-- MODAL DETALHES DO KIT -->
     <div id="modalDetalhes" class="detalhes-overlay">
         <div class="detalhes-header">
             <button class="btn-voltar-det" onclick="window.fecharDetalhes()"><i class="bi bi-chevron-left"></i> Voltar</button>
@@ -183,12 +225,9 @@
         </div>
         
         <div class="detalhes-conteudo">
-            <!-- Imagem ocupando as bordas -->
             <img id="det-img" src="" alt="Imagem do Kit" class="detalhes-img" onclick="window.abrirLightbox(this.src)">
-            
             <h2 class="detalhes-nome" id="det-nome"></h2>
             
-            <!-- Cards de Valor e Serve -->
             <div class="detalhes-cards">
                 <div class="detalhes-card-info">
                     <span class="label">Valor</span>
@@ -220,7 +259,6 @@
             </div>
         </div>
         
-        <!-- Rodapé fixo com contador e botão adicionar -->
         <div class="detalhes-footer">
             <div class="detalhes-qtd">
                 <button onclick="window.alterarQtdDetalhes(-1)"><i class="bi bi-trash text-danger fs-5"></i></button>
@@ -231,7 +269,7 @@
         </div>
     </div>
 
-    <!-- MODAL ADICIONAR PRODUTO (CARRINHO) -->
+    <!-- MODAL ADICIONAR PRODUTO -->
     <div class="modal fade" id="modalPeso" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content modal-add">
@@ -295,7 +333,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light flex-fill" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger fw-bold flex-fill text-white" onclick="window.confirmarAdicao()">Adicionar</button>
+                    <button type="button" class="btn btn-danger fw-bold flex-fill text-white" id="btn-confirmar-adicao" onclick="window.confirmarAdicao()">Adicionar</button>
                 </div>
             </div>
         </div>
