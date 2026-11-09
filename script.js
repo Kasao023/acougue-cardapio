@@ -98,23 +98,21 @@ function calcularStatusAutomatico() {
 
     const minutosAgora = hora * 60 + minuto;
 
-    // 08:00 = 480 min | 19:00 = 1140 min | 18:00 = 1080 min
     let aberto = false;
     let mensagem = '';
 
-    if (diaSemana.includes('seg') || diaSemana.includes('ter') || diaSemana.includes('qua') || diaSemana.includes('qui') || diaSemana.includes('sex')) {
-        aberto = minutosAgora >= 480 && minutosAgora < 1140;
+    // SEG–SÁB: 08:00 às 19:30 (480 a 1170 minutos)
+    if (diaSemana.includes('seg') || diaSemana.includes('ter') || diaSemana.includes('qua') || diaSemana.includes('qui') || diaSemana.includes('sex') || diaSemana.includes('sáb') || diaSemana.includes('sab')) {
+        aberto = minutosAgora >= 480 && minutosAgora < 1170;
         if (aberto) mensagem = 'Aberto para pedidos';
         else if (minutosAgora < 480) mensagem = 'Abre hoje às 08:00';
         else mensagem = 'Fechado • Abre amanhã às 08:00';
-    } else if (diaSemana.includes('sáb') || diaSemana.includes('sab')) {
-        aberto = minutosAgora >= 480 && minutosAgora < 1080;
+    } else {
+        // DOMINGO: 08:00 às 13:00 (480 a 780 minutos)
+        aberto = minutosAgora >= 480 && minutosAgora < 780;
         if (aberto) mensagem = 'Aberto para pedidos';
         else if (minutosAgora < 480) mensagem = 'Abre hoje às 08:00';
         else mensagem = 'Fechado • Abre segunda às 08:00';
-    } else {
-        aberto = false;
-        mensagem = 'Fechado • Abre segunda às 08:00';
     }
 
     return { aberto, mensagem };
@@ -137,7 +135,6 @@ function aplicarStatusNaTela() {
         statusLoja.aberto = false;
         statusLoja.mensagem = 'Fechado no momento';
     } else {
-        // Automático
         statusLoja.aberto = auto.aberto;
         statusLoja.mensagem = auto.mensagem;
         if (auto.aberto) {
@@ -291,7 +288,7 @@ function scrollParaCategoria(id, btn) {
     if (secao) secao.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// RENDERIZAR PRODUTOS (INCLUINDO PROMOÇÕES)
+// RENDERIZAR PRODUTOS
 function renderizarProdutos(filtro = '') {
     const container = document.getElementById('produtos-container');
     if (!container) return;
@@ -650,7 +647,6 @@ window.abrirModalEndereco = function() {
 
 // ENVIAR PEDIDO WHATSAPP
 window.enviarPedidoWhatsApp = function() {
-    // Bloqueia se loja estiver fechada
     if (!statusLoja.aberto) {
         alert('A loja está fechada no momento. Volte no horário de funcionamento para fazer seu pedido.');
         return;
@@ -742,7 +738,6 @@ function mostrarToast(texto) {
 document.addEventListener('DOMContentLoaded', function() {
     carregarDados();
     ouvirStatusLoja();
-    // Atualiza o status automático a cada 1 minuto
     setInterval(aplicarStatusNaTela, 60000);
 
     const carousel = document.getElementById('bannerCarousel');
@@ -777,7 +772,7 @@ document.addEventListener('DOMContentLoaded', function() {
             autoScrollInterval = setInterval(() => {
                 let nextIndex = (currentIndex + 1) % items.length;
                 scrollToIndex(nextIndex);
-            }, 4000);
+            }, 5000); // 5 segundos (mais fluido)
         }
 
         function stopAutoScroll() { clearInterval(autoScrollInterval); }
