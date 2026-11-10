@@ -39,7 +39,8 @@
         .admin-card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
         .admin-card img.grayscale { filter: grayscale(1); }
         
-        .btn-acao { border: none; border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 0.85rem; }
+        .btn-acao { border: none; border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 0.85rem; transition: 0.15s; }
+        .btn-acao:active { transform: scale(0.95); }
         .btn-editar { background: #ffeeba; color: #856404; }
         .btn-excluir { background: #f8d7da; color: #721c24; }
         .btn-disponivel { background: #d4edda; color: #155724; }
@@ -319,7 +320,6 @@
                     if (val && val.name) existentes.push(val.name.toLowerCase());
                 });
 
-                // Ordem desejada: Kits da Semana (0), Kits Churrasco (1), Bebidas (2), Mercearia (3), Hortifruti (4), Bovino (5), Suíno (6), Aves (7), Assados (8)
                 const padrao = [
                     { nome: 'Kits da Semana', ordem: 0 },
                     { nome: 'Kits Churrasco', ordem: 1 },
@@ -616,7 +616,6 @@
                 input.placeholder = 'Ex: 1kg, 500g, 5 unidades, 1 dúzia';
                 wrapper.style.display = 'block';
             } else {
-                // Carnes (Bovino, Suíno, Aves, Assados) — sem campo
                 wrapper.style.display = 'none';
                 input.value = '';
             }
@@ -867,10 +866,9 @@
             }
             let html = '';
             categoriasGlobais.forEach((c, index) => {
-                const temProdutos = produtosGlobais.some(p => p.menuId === c.id);
                 const qtdProdutos = produtosGlobais.filter(p => p.menuId === c.id).length;
                 html += `
-                    <div class="admin-card tipo-cat">
+                    <div class="admin-card tipo-cat" id="cat-item-${c.id}">
                         <div class="d-flex align-items-center gap-3">
                             <div class="cat-info">
                                 <span class="cat-nome">${c.nome}</span>
@@ -881,7 +879,7 @@
                             <button class="btn-acao btn-subir" onclick="moverCategoria('${c.id}', -1)" ${index === 0 ? 'disabled style="opacity:0.4"' : ''} title="Mover para cima"><i class="bi bi-arrow-up"></i></button>
                             <button class="btn-acao btn-descer" onclick="moverCategoria('${c.id}', 1)" ${index === categoriasGlobais.length - 1 ? 'disabled style="opacity:0.4"' : ''} title="Mover para baixo"><i class="bi bi-arrow-down"></i></button>
                             <button class="btn-acao btn-editar" onclick="abrirEditarCategoria('${c.id}')"><i class="bi bi-pencil"></i></button>
-                            <button class="btn-acao btn-excluir" onclick="excluirCategoria('${c.id}', ${temProdutos})"><i class="bi bi-trash"></i></button>
+                            <button class="btn-acao btn-excluir" onclick="excluirCategoria('${c.id}', ${qtdProdutos > 0})"><i class="bi bi-trash"></i></button>
                         </div>
                     </div>
                 `;
@@ -916,7 +914,6 @@
                     return db.ref('Category/' + id).update({ name: nome, ordem: ordemAtual });
                 }).then(() => finalizarSalvarCategoria());
             } else {
-                // Nova categoria: coloca no final (ordem 999)
                 db.ref('Category').push({ name: nome, ordem: 999 }).then(() => finalizarSalvarCategoria());
             }
         }
@@ -939,37 +936,35 @@
             });
         }
 
+        // ============================================
+        // MOVER CATEGORIA (FLUIDEZ OTIMISTA)
+        // ============================================
         function moverCategoria(id, direcao) {
             const index = categoriasGlobais.findIndex(c => c.id === id);
             if (index === -1) return;
             const alvoIndex = index + direcao;
             if (alvoIndex < 0 || alvoIndex >= categoriasGlobais.length) return;
 
-            const atual = categoriasGlobais[index];
-            const alvo = categoriasGlobais[alvoIndex];
+            // Troca na lista local IMEDIATAMENTE (feedback instantâneo)
+            const temp = categoriasGlobais[index];
+            categoriasGlobais[index] = categoriasGlobais[alvoIndex];
+            categoriasGlobais[alvoIndex] = temp;
 
-            const ordemAtual = atual.ordem !== undefined ? atual.ordem : 999;
-            const ordemAlvo = alvo.ordem !== undefined ? alvo.ordem : 999;
+            // Re-renderiza na hora
+            renderizarListaCategorias();
 
-            if (ordemAtual === 999 && ordemAlvo === 999) {
-                const atualizacoes = {};
-                categoriasGlobais.forEach((c, i) => {
-                    atualizacoes['Category/' + c.id + '/ordem'] = i;
-                });
-                db.ref().update(atualizacoes).then(() => {
-                    moverCategoria(id, direcao);
-                });
-                return;
-            }
-
+            // Reatribui ordens sequenciais (0, 1, 2, 3...) para todas
             const atualizacoes = {};
-            atualizacoes['Category/' + atual.id + '/ordem'] = ordemAlvo;
-            atualizacoes['Category/' + alvo.id + '/ordem'] = ordemAtual;
-            db.ref().update(atualizacoes).then(() => {
+            categoriasGlobais.forEach((c, i) => {
+                c.ordem = i;
+                atualizacoes['Category/' + c.id + '/ordem'] = i;
+            });
+
+            // Envia para o Firebase (silenciosamente)
+            db.ref().update(atualizacoes).catch(err => {
+                console.error('Erro ao reordenar:', err);
+                alert('Erro ao salvar a nova ordem. Tente novamente.');
                 carregarCategorias();
-            }).catch(err => {
-                console.error(err);
-                alert('Erro ao reordenar.');
             });
         }
     </script>
