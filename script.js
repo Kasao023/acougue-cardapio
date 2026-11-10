@@ -36,6 +36,18 @@ function ehKit(prod) {
     return false;
 }
 
+// ============================================
+// FUNÇÃO AUXILIAR: TIPO DE CATEGORIA
+// ============================================
+function getTipoCategoria(nomeCat) {
+    const n = (nomeCat || '').toLowerCase();
+    if (n.includes('kit')) return 'kit';
+    if (n.includes('bebida')) return 'bebida';
+    if (n.includes('mercearia') || n.includes('hortifruti')) return 'mercearia';
+    if (n.includes('bovino') || n.includes('suíno') || n.includes('suino') || n.includes('aves') || n.includes('assado')) return 'carne';
+    return 'outro';
+}
+
 // NAVEGAÇÃO DE TELAS
 window.entrarNaLoja = function() {
     const telaHome = document.getElementById('tela-home');
@@ -79,7 +91,7 @@ window.verificarPagamento = function() {
 }
 
 // ============================================
-// STATUS ABERTO / FECHADO (HÍBRIDO)
+// STATUS ABERTO / FECHADO
 // ============================================
 function calcularStatusAutomatico() {
     const agora = new Date();
@@ -97,18 +109,15 @@ function calcularStatusAutomatico() {
     });
 
     const minutosAgora = hora * 60 + minuto;
-
     let aberto = false;
     let mensagem = '';
 
-    // SEG–SÁB: 08:00 às 19:30 (480 a 1170 minutos)
     if (diaSemana.includes('seg') || diaSemana.includes('ter') || diaSemana.includes('qua') || diaSemana.includes('qui') || diaSemana.includes('sex') || diaSemana.includes('sáb') || diaSemana.includes('sab')) {
         aberto = minutosAgora >= 480 && minutosAgora < 1170;
         if (aberto) mensagem = 'Aberto para pedidos';
         else if (minutosAgora < 480) mensagem = 'Abre hoje às 08:00';
         else mensagem = 'Fechado • Abre amanhã às 08:00';
     } else {
-        // DOMINGO: 08:00 às 13:00 (480 a 780 minutos)
         aberto = minutosAgora >= 480 && minutosAgora < 780;
         if (aberto) mensagem = 'Aberto para pedidos';
         else if (minutosAgora < 480) mensagem = 'Abre hoje às 08:00';
@@ -121,9 +130,7 @@ function calcularStatusAutomatico() {
 function aplicarStatusNaTela() {
     const el = document.getElementById('status-loja');
     if (!el) return;
-
     const auto = calcularStatusAutomatico();
-
     if (statusLoja.manual === 'aberta') {
         el.className = 'topo-status-fechado aberto';
         el.innerHTML = `<i class="bi bi-check-circle-fill"></i> Aberto para pedidos`;
@@ -149,8 +156,7 @@ function aplicarStatusNaTela() {
 
 function ouvirStatusLoja() {
     db.ref('config/lojaStatus').on('value', snap => {
-        const val = snap.val();
-        statusLoja.manual = val || 'auto';
+        statusLoja.manual = snap.val() || 'auto';
         aplicarStatusNaTela();
     });
 }
@@ -164,17 +170,16 @@ function carregarDados() {
         snapCat.forEach(c => {
             const val = c.val();
             if (val && val.name) {
-                categorias.push({ id: c.key, nome: val.name });
+                categorias.push({
+                    id: c.key,
+                    nome: val.name,
+                    ordem: val.ordem !== undefined ? val.ordem : 999
+                });
             }
         });
 
         categorias.sort((a, b) => {
-            const ordemFixa = ['Promoção', 'Kits da Semana', 'Kits Churrasco', 'Promoções', 'Bovino', 'Suíno', 'Aves', 'Assados e Domingos'];
-            const posA = ordemFixa.indexOf(a.nome);
-            const posB = ordemFixa.indexOf(b.nome);
-            const finalA = posA === -1 ? 999 : posA;
-            const finalB = posB === -1 ? 999 : posB;
-            if (finalA !== finalB) return finalA - finalB;
+            if (a.ordem !== b.ordem) return a.ordem - b.ordem;
             return a.nome.localeCompare(b.nome);
         });
 
@@ -193,15 +198,9 @@ function carregarDados() {
                 if (val.name && val.menuId) {
                     const parsed = parsePreco(val.price || '');
                     produtos.push({
-                        id: p.key,
-                        nome: val.name,
-                        precoNumerico: parsed.valor,
-                        unidade: parsed.unidade,
-                        imagem: val.image || '',
-                        menuId: val.menuId,
-                        disponivel: val.disponivel !== false,
-                        isKit: false,
-                        serve: val.serve || 'N/A',
+                        id: p.key, nome: val.name, precoNumerico: parsed.valor, unidade: parsed.unidade,
+                        imagem: val.image || '', menuId: val.menuId, disponivel: val.disponivel !== false,
+                        isKit: false, serve: val.serve || '',
                         itens: val.itens || 'Informações no local',
                         detalhes: val.detalhes || 'Produto fresco e de alta qualidade.'
                     });
@@ -215,15 +214,9 @@ function carregarDados() {
                 if (val.nameC && val.menuId) {
                     const parsed = parsePreco(val.priceC || '');
                     produtos.push({
-                        id: p.key,
-                        nome: val.nameC,
-                        precoNumerico: parsed.valor,
-                        unidade: 'un',
-                        imagem: val.imageC || '',
-                        menuId: val.menuId,
-                        disponivel: val.disponivel !== false,
-                        isKit: true,
-                        serve: val.serveC || '5',
+                        id: p.key, nome: val.nameC, precoNumerico: parsed.valor, unidade: 'un',
+                        imagem: val.imageC || '', menuId: val.menuId, disponivel: val.disponivel !== false,
+                        isKit: true, serve: val.serveC || '5',
                         itens: val.itensC || 'Consulte os itens na arte do kit',
                         detalhes: val.detalhesC || 'Kit completo e selecionado.'
                     });
@@ -234,9 +227,7 @@ function carregarDados() {
         if (snapPromo && snapPromo.exists()) {
             snapPromo.forEach(p => {
                 const val = p.val();
-                if (val.imagem) {
-                    promocoes.push({ id: p.key, imagem: val.imagem });
-                }
+                if (val.imagem) promocoes.push({ id: p.key, imagem: val.imagem });
             });
         }
 
@@ -255,8 +246,7 @@ function parsePreco(precoStr) {
     let str = String(precoStr).replace(/\$/g, '').trim();
     let unidade = 'un';
     if (/\bkg\b/i.test(str)) unidade = 'kg';
-    else if (/\bun\b/i.test(str) || /unidade/i.test(str)) unidade = 'un';
-    
+    else if (/\bun\b/i.test(str) || /unidade/i.test(str) || /dz/i.test(str) || /dúzia/i.test(str)) unidade = 'un';
     let nums = str.replace(/[^\d,.]/g, '').trim().replace(',', '.');
     let valor = parseFloat(nums);
     if (isNaN(valor)) valor = 0;
@@ -268,15 +258,12 @@ function renderizarNavCategorias() {
     const container = document.getElementById('categorias-scroll');
     if (!container) return;
     let html = '<button class="categoria-chip ativo" onclick="scrollParaCategoria(\'todos\', this)">Todos</button>';
-    
     if (promocoes.length > 0) {
         html += `<button class="categoria-chip" onclick="scrollParaCategoria('promocao', this)">🔥 Promoção</button>`;
     }
-    
     categorias.forEach(cat => {
         html += `<button class="categoria-chip" onclick="scrollParaCategoria('${cat.id}', this)">${cat.nome}</button>`;
     });
-    
     container.innerHTML = html;
 }
 
@@ -300,7 +287,6 @@ function renderizarProdutos(filtro = '') {
         html += `<section class="categoria-secao" id="secao-promocao">`;
         html += `<h2 class="categoria-titulo-promo"><i class="bi bi-fire"></i> Promoção</h2>`;
         html += `<div class="lista-promocoes">`;
-        
         promocoes.forEach(promo => {
             html += `
                 <div class="promo-card" onclick="window.abrirLightbox('${promo.imagem}')" style="cursor: zoom-in;">
@@ -309,7 +295,6 @@ function renderizarProdutos(filtro = '') {
                 </div>
             `;
         });
-        
         html += `</div></section>`;
         total += promocoes.length;
     }
@@ -336,9 +321,7 @@ function renderizarProdutos(filtro = '') {
 
             if (isKit) {
                 html += `
-                    <div class="${classeCard}" 
-                         style="cursor: pointer;"
-                         onclick="window.clicarKit('${prod.id}')">
+                    <div class="${classeCard}" style="cursor: pointer;" onclick="window.clicarKit('${prod.id}')">
                         <img src="${prod.imagem}" alt="${prod.nome}" class="produto-imagem" loading="lazy" 
                              onerror="this.src='https://placehold.co/150x150/eeeeee/999999?text=Sem+Foto'">
                         <div class="produto-info">
@@ -376,34 +359,39 @@ window.filtrarProdutos = function() {
     renderizarProdutos(document.getElementById('busca').value);
 }
 
-window.clicarKit = function(id) {
-    window.abrirDetalhes(id);
-};
+window.clicarKit = function(id) { window.abrirDetalhes(id); };
 
 // TELA DE DETALHES
 window.abrirDetalhes = function(id) {
     const prod = produtos.find(p => p.id === id);
     if (!prod) { console.error('Produto não encontrado:', id); return; }
-
     produtoAtual = prod;
     qtdDetalhes = 1;
+    const cat = categorias.find(c => c.id === prod.menuId);
+    const tipoCat = getTipoCategoria(cat ? cat.nome : '');
 
     document.getElementById('det-img').src = prod.imagem;
     document.getElementById('det-nome').textContent = prod.nome;
     document.getElementById('det-preco').textContent = `R$ ${prod.precoNumerico.toFixed(2).replace('.', ',')}`;
-    document.getElementById('det-serve').textContent = prod.serve || 'N/A';
+    
+    // Label dinâmico: Serve / Volume / Peso-Qtd
+    const labelServe = document.querySelector('.detalhes-card-info:nth-child(2) .label');
+    if (labelServe) {
+        if (tipoCat === 'kit') labelServe.textContent = 'Serve';
+        else if (tipoCat === 'bebida') labelServe.textContent = 'Volume';
+        else if (tipoCat === 'mercearia') labelServe.textContent = 'Peso/Qtd';
+        else labelServe.textContent = 'Serve';
+    }
+    document.getElementById('det-serve').textContent = prod.serve || '—';
     document.getElementById('det-itens').textContent = prod.itens;
     document.getElementById('det-descricao').textContent = prod.detalhes;
-    
     document.getElementById('det-qtd-txt').textContent = qtdDetalhes;
     document.getElementById('detalhes-texto').style.display = 'none';
     document.getElementById('preparo-texto').style.display = 'none';
-
     document.getElementById('det-btn-add').onclick = () => {
         window.fecharDetalhes();
         window.abrirModalPeso(id, qtdDetalhes);
     };
-
     const modal = document.getElementById('modalDetalhes');
     modal.style.display = 'flex';
     modal.classList.add('show');
@@ -459,6 +447,9 @@ window.abrirModalPeso = function(produtoId, qtdPreDefinida = null) {
     if (!prod) return;
     produtoAtual = prod;
 
+    const cat = categorias.find(c => c.id === prod.menuId);
+    const tipoCat = getTipoCategoria(cat ? cat.nome : '');
+
     document.getElementById('modal-produto-imagem').src = prod.imagem;
     document.getElementById('modal-produto-nome').textContent = prod.nome;
     document.getElementById('modal-produto-preco').textContent = `R$ ${prod.precoNumerico.toFixed(2).replace('.', ',')}${prod.unidade === 'kg' ? ' /kg' : ' /un'}`;
@@ -468,29 +459,31 @@ window.abrirModalPeso = function(produtoId, qtdPreDefinida = null) {
     const opcoesCorte = document.getElementById('opcoes-corte-wrapper');
     const qtdRapida = document.getElementById('qtd-rapida-wrapper');
 
-    const isKitBlindado = ehKit(prod) || prod.unidade === 'un';
+    // REGRAS:
+    // - Carnes (Bovino, Suíno, Aves, Assados) OU qualquer produto em kg → peso + corte
+    // - Kits, Bebidas, Mercearia, Hortifruti → quantidade em unidades (sem corte)
+    const isCarne = tipoCat === 'carne' || prod.unidade === 'kg';
+    const isPeso = isCarne; // se a categoria é carne OU o preço é em kg, usa peso
 
-    if (isKitBlindado) {
-        wrapperUnidade.style.display = 'none';
-        opcoesCorte.style.display = 'none';
-        if (qtdRapida) qtdRapida.style.display = 'none';
-        labelQtd.textContent = 'Quantidade (unidades)';
-        document.getElementById('modal-quantidade').placeholder = 'Ex: 2';
-    } else {
+    if (isPeso) {
         wrapperUnidade.style.display = 'block';
         opcoesCorte.style.display = 'block';
         if (qtdRapida) qtdRapida.style.display = 'flex';
         labelQtd.textContent = 'Quantidade (g)';
         document.getElementById('modal-quantidade').placeholder = 'Ex: 500';
         document.getElementById('unidade-g').checked = true;
+    } else {
+        wrapperUnidade.style.display = 'none';
+        opcoesCorte.style.display = 'none';
+        if (qtdRapida) qtdRapida.style.display = 'none';
+        labelQtd.textContent = 'Quantidade (unidades)';
+        document.getElementById('modal-quantidade').placeholder = 'Ex: 2';
     }
 
     document.getElementById('modal-quantidade').value = qtdPreDefinida !== null ? qtdPreDefinida : '';
     document.getElementById('modal-observacao').value = '';
     document.getElementById('corte-inteiro').checked = true;
-    
     window.atualizarCalculo();
-
     new bootstrap.Modal(document.getElementById('modalPeso')).show();
 }
 
@@ -510,9 +503,7 @@ window.atualizarCalculo = function() {
     const labelQtd = document.getElementById('modal-qtd-label');
     const isKit = ehKit(produtoAtual) || produtoAtual.unidade === 'un';
     const unidade = isKit ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
-
     if (!isKit) labelQtd.textContent = unidade === 'g' ? 'Quantidade (g)' : 'Quantidade (kg)';
-
     const qtdDigitada = parseFloat(input.value) || 0;
     let quantidadeKg = isKit ? qtdDigitada : (unidade === 'g' ? qtdDigitada / 1000 : qtdDigitada);
     const subtotal = produtoAtual.precoNumerico * quantidadeKg;
@@ -523,29 +514,23 @@ window.confirmarAdicao = function() {
     if (!produtoAtual) return;
     const input = document.getElementById('modal-quantidade');
     const qtdDigitada = parseFloat(input.value) || 0;
-
     if (qtdDigitada <= 0) { alert('Informe uma quantidade válida.'); return; }
-
     const isKit = ehKit(produtoAtual) || produtoAtual.unidade === 'un';
     const unidade = isKit ? 'un' : (document.querySelector('input[name="unidade"]:checked')?.value || 'g');
-    
     let quantidadeKg = isKit ? qtdDigitada : (unidade === 'g' ? qtdDigitada / 1000 : qtdDigitada);
     let quantidadeExibir = isKit ? `${qtdDigitada} un` : (unidade === 'g' ? `${qtdDigitada}g` : `${qtdDigitada}kg`);
     const subtotal = produtoAtual.precoNumerico * quantidadeKg;
-
     let tipoCorte = '';
     if (!isKit && produtoAtual.unidade === 'kg') {
         tipoCorte = document.querySelector('input[name="tipoCorte"]:checked')?.value || 'Inteiro';
     }
     const observacao = document.getElementById('modal-observacao').value.trim();
-
     const item = {
         id: produtoAtual.id, nome: produtoAtual.nome, imagem: produtoAtual.imagem,
         precoKg: produtoAtual.precoNumerico, unidade: unidade,
         quantidadeKg: quantidadeKg, quantidadeExibir: quantidadeExibir,
         subtotal: subtotal, tipoCorte: tipoCorte, observacao: observacao
     };
-
     carrinho.push(item);
     salvarCarrinho();
     atualizarCarrinho();
@@ -560,26 +545,21 @@ function atualizarCarrinho() {
         if (carrinho.length > 0) { badge.textContent = carrinho.length; badge.style.display = 'flex'; }
         else badge.style.display = 'none';
     }
-
     const body = document.getElementById('carrinho-body');
     const footer = document.getElementById('carrinho-footer');
-
     if (carrinho.length === 0) {
         body.innerHTML = `<div class="carrinho-vazio"><i class="bi bi-cart-x"></i><h5>Seu carrinho está vazio</h5><p class="small">Adicione produtos para começar</p></div>`;
         footer.style.display = 'none';
         return;
     }
-
     footer.style.display = 'block';
     let html = '';
     let total = 0;
-
     carrinho.forEach((item, index) => {
         total += item.subtotal;
         let detalhesExtras = '';
         if (item.tipoCorte) detalhesExtras += `<div class="item-obs"><strong>Corte:</strong> ${item.tipoCorte}</div>`;
         if (item.observacao) detalhesExtras += `<div class="item-obs"><strong>Obs:</strong> ${item.observacao}</div>`;
-
         html += `
             <div class="item-carrinho">
                 <img src="${item.imagem}" alt="${item.nome}" onerror="this.src='https://placehold.co/100x100/eeeeee/999999?text=?'">
@@ -593,7 +573,6 @@ function atualizarCarrinho() {
             </div>
         `;
     });
-
     body.innerHTML = html;
     document.getElementById('carrinho-total').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
 }
@@ -631,17 +610,14 @@ function carregarCarrinhoSalvo() {
 window.abrirModalEndereco = function() {
     if (carrinho.length === 0) { alert('Seu carrinho está vazio!'); return; }
     window.fecharCarrinho();
-
     const dadosSalvos = JSON.parse(localStorage.getItem('cliente_hs') || '{}');
     if (dadosSalvos.nome) document.getElementById('cli-nome').value = dadosSalvos.nome;
     if (dadosSalvos.rua) document.getElementById('cli-rua').value = dadosSalvos.rua;
     if (dadosSalvos.numero) document.getElementById('cli-numero').value = dadosSalvos.numero;
     if (dadosSalvos.bairro) document.getElementById('cli-bairro').value = dadosSalvos.bairro;
     if (dadosSalvos.complemento) document.getElementById('cli-complemento').value = dadosSalvos.complemento;
-
     document.getElementById('wrapper-troco').classList.add('d-none');
     document.getElementById('cli-troco').value = '';
-
     new bootstrap.Modal(document.getElementById('modalEndereco')).show();
 }
 
@@ -651,7 +627,6 @@ window.enviarPedidoWhatsApp = function() {
         alert('A loja está fechada no momento. Volte no horário de funcionamento para fazer seu pedido.');
         return;
     }
-
     const nome = document.getElementById('cli-nome').value.trim();
     const rua = document.getElementById('cli-rua').value.trim();
     const numero = document.getElementById('cli-numero').value.trim();
@@ -660,12 +635,10 @@ window.enviarPedidoWhatsApp = function() {
     const pagamento = document.getElementById('cli-pagamento').value;
     const trocoInput = document.getElementById('cli-troco').value;
     const troco = parseFloat(trocoInput) || 0;
-
     if (!nome || !rua || !numero || !bairro || !pagamento) {
         alert('Por favor, preencha todos os campos obrigatórios (*) antes de enviar.');
         return;
     }
-
     if (pagamento === 'Dinheiro' && trocoInput && troco > 0) {
         const totalCarrinho = carrinho.reduce((acc, item) => acc + item.subtotal, 0);
         if (troco < totalCarrinho) {
@@ -673,10 +646,8 @@ window.enviarPedidoWhatsApp = function() {
             return;
         }
     }
-
     const dadosCliente = { nome, rua, numero, bairro, complemento };
     localStorage.setItem('cliente_hs', JSON.stringify(dadosCliente));
-
     let total = 0;
     let mensagem = `*NOVO PEDIDO - CASA DE CARNE H&S*\n`;
     mensagem += `----------------------------------------\n\n`;
@@ -691,7 +662,6 @@ window.enviarPedidoWhatsApp = function() {
     }
     mensagem += `\n----------------------------------------\n\n`;
     mensagem += `*ITENS DO PEDIDO:*\n`;
-
     carrinho.forEach(item => {
         total += item.subtotal;
         const subtotalFmt = item.subtotal.toFixed(2).replace('.', ',');
@@ -701,7 +671,6 @@ window.enviarPedidoWhatsApp = function() {
         if (item.observacao) mensagem += `  📝 Obs: ${item.observacao}\n`;
         mensagem += `  💵 Subtotal: R$ ${subtotalFmt}\n`;
     });
-
     mensagem += `\n----------------------------------------\n`;
     mensagem += `*VALOR ESTIMADO: R$ ${total.toFixed(2).replace('.', ',')}*\n`;
     mensagem += `----------------------------------------\n\n`;
@@ -710,7 +679,6 @@ window.enviarPedidoWhatsApp = function() {
     mensagem += `🥩 *Iremos pesar os produtos e enviar o valor final e a Chave PIX nesta conversa.*\n\n`;
     mensagem += `Por favor, *aguarde a nossa confirmação* para realizar o pagamento. Evitando assim a necessidade de pagamentos adicionais ou reembolsos.\n\n`;
     mensagem += `Obrigado pela preferência! 😊`;
-
     bootstrap.Modal.getInstance(document.getElementById('modalEndereco')).hide();
     const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
     window.open(url, '_blank');
@@ -747,13 +715,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (carousel && items.length > 0) {
         let currentIndex = 0;
         let autoScrollInterval;
-
         function scrollToIndex(index) {
             const itemWidth = items[0].offsetWidth + 15;
             carousel.scrollTo({ left: index * itemWidth, behavior: 'smooth' });
             updateDots(index);
         }
-
         function updateDots(index) {
             dots.forEach((dot, i) => {
                 if (i === index) dot.classList.add('ativo');
@@ -761,22 +727,18 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             currentIndex = index;
         }
-
         carousel.addEventListener('scroll', () => {
             const itemWidth = items[0].offsetWidth + 15;
             const newIndex = Math.round(carousel.scrollLeft / itemWidth);
             if (newIndex !== currentIndex && newIndex < items.length) updateDots(newIndex);
         });
-
         function startAutoScroll() {
             autoScrollInterval = setInterval(() => {
                 let nextIndex = (currentIndex + 1) % items.length;
                 scrollToIndex(nextIndex);
-            }, 5000); // 5 segundos (mais fluido)
+            }, 5000);
         }
-
         function stopAutoScroll() { clearInterval(autoScrollInterval); }
-
         startAutoScroll();
         carousel.addEventListener('touchstart', stopAutoScroll, { passive: true });
         carousel.addEventListener('mousedown', stopAutoScroll);
