@@ -132,9 +132,7 @@ body {
 .topo-logo {
     width: 80px;
     height: 80px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 2px solid var(--cinza-borda);
+    object-fit: contain;
     margin-bottom: 10px;
 }
 .topo-nome { font-size: 1.3rem; font-weight: 700; color: var(--escuro); margin-bottom: 5px; }
