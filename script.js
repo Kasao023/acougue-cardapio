@@ -15,7 +15,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const WHATSAPP = "5515998027793";
+const WHATSAPP = "5515996959284";
 
 let categorias = [];
 let produtos = [];
