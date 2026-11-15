@@ -26,7 +26,7 @@ let qtdDetalhes = 1;
 let statusLoja = { manual: 'auto', aberto: false, mensagem: '' };
 
 // ============================================
-// FUNÇÃO AUXILIAR: IDENTIFICAR SE É KIT
+// FUNÇÕES AUXILIARES
 // ============================================
 function ehKit(prod) {
     if (prod.isKit === true) return true;
@@ -36,9 +36,6 @@ function ehKit(prod) {
     return false;
 }
 
-// ============================================
-// FUNÇÃO AUXILIAR: TIPO DE CATEGORIA
-// ============================================
 function getTipoCategoria(nomeCat) {
     const n = (nomeCat || '').toLowerCase();
     if (n.includes('kit')) return 'kit';
@@ -48,7 +45,9 @@ function getTipoCategoria(nomeCat) {
     return 'outro';
 }
 
+// ============================================
 // NAVEGAÇÃO DE TELAS
+// ============================================
 window.entrarNaLoja = function() {
     const telaHome = document.getElementById('tela-home');
     const appPrincipal = document.getElementById('app-principal');
@@ -97,21 +96,14 @@ function calcularStatusAutomatico() {
     const agora = new Date();
     const opcoes = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', weekday: 'short', hour12: false };
     const partes = new Intl.DateTimeFormat('pt-BR', opcoes).formatToParts(agora);
-    
-    let diaSemana = '';
-    let hora = 0;
-    let minuto = 0;
-    
+    let diaSemana = '', hora = 0, minuto = 0;
     partes.forEach(p => {
         if (p.type === 'weekday') diaSemana = p.value.toLowerCase();
         if (p.type === 'hour') hora = parseInt(p.value);
         if (p.type === 'minute') minuto = parseInt(p.value);
     });
-
     const minutosAgora = hora * 60 + minuto;
-    let aberto = false;
-    let mensagem = '';
-
+    let aberto = false, mensagem = '';
     if (diaSemana.includes('seg') || diaSemana.includes('ter') || diaSemana.includes('qua') || diaSemana.includes('qui') || diaSemana.includes('sex') || diaSemana.includes('sáb') || diaSemana.includes('sab')) {
         aberto = minutosAgora >= 480 && minutosAgora < 1170;
         if (aberto) mensagem = 'Aberto para pedidos';
@@ -123,7 +115,6 @@ function calcularStatusAutomatico() {
         else if (minutosAgora < 480) mensagem = 'Abre hoje às 08:00';
         else mensagem = 'Fechado • Abre segunda às 08:00';
     }
-
     return { aberto, mensagem };
 }
 
@@ -135,15 +126,12 @@ function aplicarStatusNaTela() {
         el.className = 'topo-status-fechado aberto';
         el.innerHTML = `<i class="bi bi-check-circle-fill"></i> Aberto para pedidos`;
         statusLoja.aberto = true;
-        statusLoja.mensagem = 'Aberto para pedidos';
     } else if (statusLoja.manual === 'fechada') {
         el.className = 'topo-status-fechado fechado';
         el.innerHTML = `<i class="bi bi-x-circle-fill"></i> Fechado no momento`;
         statusLoja.aberto = false;
-        statusLoja.mensagem = 'Fechado no momento';
     } else {
         statusLoja.aberto = auto.aberto;
-        statusLoja.mensagem = auto.mensagem;
         if (auto.aberto) {
             el.className = 'topo-status-fechado aberto';
             el.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${auto.mensagem}`;
@@ -169,20 +157,12 @@ function carregarDados() {
         categorias = [];
         snapCat.forEach(c => {
             const val = c.val();
-            if (val && val.name) {
-                categorias.push({
-                    id: c.key,
-                    nome: val.name,
-                    ordem: val.ordem !== undefined ? val.ordem : 999
-                });
-            }
+            if (val && val.name) categorias.push({ id: c.key, nome: val.name, ordem: val.ordem !== undefined ? val.ordem : 999 });
         });
-
         categorias.sort((a, b) => {
             if (a.ordem !== b.ordem) return a.ordem - b.ordem;
             return a.nome.localeCompare(b.nome);
         });
-
         return Promise.all([
             db.ref('Foods').once('value').catch(() => null),
             db.ref('FoodsC').once('value').catch(() => null),
@@ -227,7 +207,7 @@ function carregarDados() {
         if (snapPromo && snapPromo.exists()) {
             snapPromo.forEach(p => {
                 const val = p.val();
-                if (val.imagem) promocoes.push({ id: p.key, imagem: val.imagem });
+                if (val.imagem) promocoes.push({ id: p.key, imagem: val.imagem, itens: val.itens || [] });
             });
         }
 
@@ -253,14 +233,14 @@ function parsePreco(precoStr) {
     return { valor, unidade };
 }
 
+// ============================================
 // RENDERIZAR NAVEGAÇÃO
+// ============================================
 function renderizarNavCategorias() {
     const container = document.getElementById('categorias-scroll');
     if (!container) return;
     let html = '<button class="categoria-chip ativo" onclick="scrollParaCategoria(\'todos\', this)">Todos</button>';
-    if (promocoes.length > 0) {
-        html += `<button class="categoria-chip" onclick="scrollParaCategoria('promocao', this)">🔥 Promoção</button>`;
-    }
+    if (promocoes.length > 0) html += `<button class="categoria-chip" onclick="scrollParaCategoria('promocao', this)">🔥 Promoção</button>`;
     categorias.forEach(cat => {
         html += `<button class="categoria-chip" onclick="scrollParaCategoria('${cat.id}', this)">${cat.nome}</button>`;
     });
@@ -275,7 +255,9 @@ function scrollParaCategoria(id, btn) {
     if (secao) secao.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// ============================================
 // RENDERIZAR PRODUTOS
+// ============================================
 function renderizarProdutos(filtro = '') {
     const container = document.getElementById('produtos-container');
     if (!container) return;
@@ -283,22 +265,22 @@ function renderizarProdutos(filtro = '') {
     let html = '';
     let total = 0;
 
-    if (promocoes.length > 0 && (termo === '' || termo.includes('promo'))) {
+    // PROMOÇÃO (só arte clicável)
+    if (promocoes.length > 0 && (termo === '' || 'promocao'.includes(termo))) {
         html += `<section class="categoria-secao" id="secao-promocao">`;
         html += `<h2 class="categoria-titulo-promo"><i class="bi bi-fire"></i> Promoção</h2>`;
-        html += `<div class="lista-promocoes">`;
         promocoes.forEach(promo => {
             html += `
-                <div class="promo-card" onclick="window.abrirLightbox('${promo.imagem}')" style="cursor: zoom-in;">
-                    <img src="${promo.imagem}" alt="Promoção" class="promo-imagem" loading="lazy"
+                <div class="promo-arte-only" onclick="window.abrirDetalhesPromo('${promo.id}')" style="cursor: pointer;">
+                    <img src="${promo.imagem}" alt="Promoção" loading="lazy"
                          onerror="this.src='https://placehold.co/600x400/eeeeee/999999?text=Promoção'">
                 </div>
             `;
         });
-        html += `</div></section>`;
-        total += promocoes.length;
+        html += `</section>`;
     }
 
+    // CATEGORIAS NORMAIS
     categorias.forEach(cat => {
         const produtosCat = produtos.filter(p => {
             const matchCat = p.menuId === cat.id;
@@ -349,7 +331,7 @@ function renderizarProdutos(filtro = '') {
         html += `</div></section>`;
     });
 
-    if (total === 0) {
+    if (total === 0 && promocoes.length === 0) {
         html = `<div class="sem-produtos"><i class="bi bi-search" style="font-size:3rem;color:#ddd;display:block;margin-bottom:10px;"></i><h4>Nenhum produto encontrado</h4></div>`;
     }
     container.innerHTML = html;
@@ -361,7 +343,326 @@ window.filtrarProdutos = function() {
 
 window.clicarKit = function(id) { window.abrirDetalhes(id); };
 
-// TELA DE DETALHES
+// ============================================
+// TELA DE DETALHES DA PROMOÇÃO
+// ============================================
+window.abrirDetalhesPromo = function(promoId) {
+    const promo = promocoes.find(p => p.id === promoId);
+    if (!promo) { console.error('Promoção não encontrada:', promoId); return; }
+
+    let modal = document.getElementById('modalPromoDetalhes');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalPromoDetalhes';
+        modal.className = 'detalhes-overlay';
+        modal.innerHTML = `
+            <div class="detalhes-header">
+                <button class="btn-voltar-det" onclick="window.fecharDetalhesPromo()"><i class="bi bi-chevron-left"></i> Voltar</button>
+                <div class="badge-resfriado"><i class="bi bi-fire"></i> Promoção</div>
+            </div>
+            <div class="detalhes-conteudo" id="promo-det-conteudo"></div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    let html = `<img id="promo-det-img" src="${promo.imagem}" class="detalhes-img" onclick="window.abrirLightbox('${promo.imagem}')">`;
+    html += `<h2 class="detalhes-nome">Promoção</h2>`;
+    html += `<div class="detalhes-secao"><h3>Itens da Promoção</h3><div class="lista-produtos" id="promo-itens-lista">`;
+
+    if (promo.itens && promo.itens.length > 0) {
+        promo.itens.forEach((item, idx) => {
+            const parsed = parsePreco(item.preco || '');
+            const precoExibir = parsed.valor > 0
+                ? `R$ ${parsed.valor.toFixed(2).replace('.', ',')} <small>${parsed.unidade === 'kg' ? '/kg' : '/un'}</small>`
+                : 'Consulte';
+            const podeAdicionar = parsed.valor > 0;
+
+            html += `
+                <div class="produto-card">
+                    <div class="produto-info" style="flex: 1;">
+                        <h3 class="produto-nome">${item.nome}</h3>
+                        <div class="produto-preco">${precoExibir}</div>
+                    </div>
+                    ${podeAdicionar 
+                        ? `<button class="btn-adicionar btn-promo-add" data-promo-id="${promo.id}" data-item-index="${idx}"><i class="bi bi-plus-lg"></i></button>` 
+                        : `<button class="btn-adicionar" style="background:#ccc; color:#fff;" disabled><i class="bi bi-x"></i></button>`}
+                </div>
+            `;
+        });
+    } else {
+        html += `<p class="text-muted small">Nenhum item cadastrado nesta promoção.</p>`;
+    }
+
+    html += `</div></div>`;
+    document.getElementById('promo-det-conteudo').innerHTML = html;
+
+    modal.style.display = 'flex';
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+};
+
+window.fecharDetalhesPromo = function() {
+    const modal = document.getElementById('modalPromoDetalhes');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+};
+
+// ============================================
+// MODAL DE PESO EXCLUSIVO PARA PROMOÇÃO (NOVO)
+// ============================================
+window.abrirModalPesoPromo = function(promoId, itemIndex) {
+    const promo = promocoes.find(p => p.id === promoId);
+    if (!promo || !promo.itens || !promo.itens[itemIndex]) {
+        alert('Item não encontrado.');
+        return;
+    }
+    const item = promo.itens[itemIndex];
+    const parsed = parsePreco(item.preco || '');
+    
+    console.log('Abrindo modal de peso exclusivo para promoção:', item.nome);
+
+    // Remove modal antigo se existir
+    let modalOld = document.getElementById('modalPesoPromoExclusivo');
+    if (modalOld) modalOld.remove();
+
+    // Cria o modal novo
+    const modal = document.createElement('div');
+    modal.id = 'modalPesoPromoExclusivo';
+    modal.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+    `;
+    
+    const isKg = parsed.unidade === 'kg';
+    const labelQtd = isKg ? 'Quantidade (g)' : 'Quantidade (unidades)';
+    const placeholderQtd = isKg ? 'Ex: 500' : 'Ex: 2';
+    
+    modal.innerHTML = `
+        <div style="background:#fff; border-radius:16px; width:100%; max-width:450px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+            <!-- Header -->
+            <div style="padding:15px 20px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:#fff; z-index:2;">
+                <h5 style="margin:0; font-weight:700; font-size:1.1rem;">Adicionar ao pedido</h5>
+                <button id="fechar-modal-promo" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999;">&times;</button>
+            </div>
+            
+            <!-- Body -->
+            <div style="padding:15px 20px;">
+                <!-- Produto -->
+                <div style="display:flex; gap:12px; align-items:center; background:#f4f5f7; padding:10px; border-radius:10px; margin-bottom:15px;">
+                    <img src="${promo.imagem}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;">
+                    <div>
+                        <h6 style="margin:0; font-weight:700; font-size:1rem;">${item.nome}</h6>
+                        <p style="margin:0; color:#777; font-size:0.85rem;">R$ ${parsed.valor.toFixed(2).replace('.', ',')}${isKg ? ' /kg' : ' /un'}</p>
+                    </div>
+                </div>
+                
+                <!-- Se for kg, mostra opção de unidade -->
+                ${isKg ? `
+                <div style="margin-bottom:15px;">
+                    <label style="font-weight:700; font-size:0.85rem; display:block; margin-bottom:8px;">Como deseja informar o peso?</label>
+                    <div style="display:flex; background:#f4f5f7; border-radius:10px; padding:4px; gap:4px;">
+                        <input type="radio" name="unidade-promo" id="promo-unidade-g" value="g" checked style="display:none;">
+                        <label for="promo-unidade-g" id="label-g" style="flex:1; text-align:center; padding:8px; border-radius:8px; font-weight:600; cursor:pointer; background:#fff; color:#d91f26; box-shadow:0 2px 6px rgba(0,0,0,0.1);">Gramas (g)</label>
+                        
+                        <input type="radio" name="unidade-promo" id="promo-unidade-kg" value="kg" style="display:none;">
+                        <label for="promo-unidade-kg" id="label-kg" style="flex:1; text-align:center; padding:8px; border-radius:8px; font-weight:600; cursor:pointer; color:#777;">Quilos (kg)</label>
+                    </div>
+                </div>
+                ` : ''}
+                
+                <!-- Quantidade -->
+                <div style="margin-bottom:15px;">
+                    <label id="promo-label-qtd" style="font-weight:700; font-size:0.85rem; display:block; margin-bottom:8px;">${labelQtd}</label>
+                    <input type="number" id="promo-quantidade" placeholder="${placeholderQtd}" min="0" step="${isKg ? '1' : '1'}"
+                           style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:1.1rem; outline:none;">
+                    ${isKg ? `
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button type="button" class="promo-qtd-rapida" data-qtd="250" style="flex:1; background:#fbe9ea; border:none; padding:8px 0; border-radius:8px; font-weight:700; font-size:0.8rem; color:#d91f26; cursor:pointer;">250g</button>
+                        <button type="button" class="promo-qtd-rapida" data-qtd="500" style="flex:1; background:#fbe9ea; border:none; padding:8px 0; border-radius:8px; font-weight:700; font-size:0.8rem; color:#d91f26; cursor:pointer;">500g</button>
+                        <button type="button" class="promo-qtd-rapida" data-qtd="1000" style="flex:1; background:#fbe9ea; border:none; padding:8px 0; border-radius:8px; font-weight:700; font-size:0.8rem; color:#d91f26; cursor:pointer;">1kg</button>
+                        <button type="button" class="promo-qtd-rapida" data-qtd="2000" style="flex:1; background:#fbe9ea; border:none; padding:8px 0; border-radius:8px; font-weight:700; font-size:0.8rem; color:#d91f26; cursor:pointer;">2kg</button>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                ${isKg ? `
+                <!-- Tipo de corte -->
+                <div style="margin-bottom:15px;">
+                    <label style="font-weight:700; font-size:0.85rem; display:block; margin-bottom:8px;">Como deseja o corte? (Opcional)</label>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <input type="radio" name="corte-promo" id="promo-corte-inteiro" value="Inteiro" checked style="display:none;">
+                        <label for="promo-corte-inteiro" class="promo-corte-btn" style="background:#d91f26; color:#fff; border:1.5px solid #d91f26; padding:6px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; cursor:pointer;">Inteiro</label>
+                        
+                        <input type="radio" name="corte-promo" id="promo-corte-bife" value="Em Bifes" style="display:none;">
+                        <label for="promo-corte-bife" class="promo-corte-btn" style="background:#f4f5f7; color:#333; border:1.5px solid #e6e8eb; padding:6px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; cursor:pointer;">Em Bifes</label>
+                        
+                        <input type="radio" name="corte-promo" id="promo-corte-cubo" value="Em Cubos" style="display:none;">
+                        <label for="promo-corte-cubo" class="promo-corte-btn" style="background:#f4f5f7; color:#333; border:1.5px solid #e6e8eb; padding:6px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; cursor:pointer;">Em Cubos</label>
+                        
+                        <input type="radio" name="corte-promo" id="promo-corte-moido" value="Moído" style="display:none;">
+                        <label for="promo-corte-moido" class="promo-corte-btn" style="background:#f4f5f7; color:#333; border:1.5px solid #e6e8eb; padding:6px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; cursor:pointer;">Moído</label>
+                    </div>
+                </div>
+                ` : ''}
+                
+                <!-- Observação -->
+                <div style="margin-bottom:15px;">
+                    <label style="font-weight:700; font-size:0.85rem; display:block; margin-bottom:8px;">Observação (Opcional)</label>
+                    <textarea id="promo-observacao" rows="2" placeholder="Ex: Moer 2x, tirar a gordura..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:0.85rem; outline:none; resize:none;"></textarea>
+                </div>
+                
+                <!-- Subtotal -->
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#fbe9ea; padding:15px; border-radius:10px; font-weight:600;">
+                    <span>Subtotal</span>
+                    <strong id="promo-subtotal" style="color:#d91f26; font-size:1.4rem;">R$ 0,00</strong>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="padding:15px 20px; border-top:1px solid #eee; display:flex; gap:10px; position:sticky; bottom:0; background:#fff;">
+                <button id="cancelar-modal-promo" style="flex:1; background:#f4f5f7; border:none; padding:12px; border-radius:8px; font-weight:600; cursor:pointer;">Cancelar</button>
+                <button id="confirmar-modal-promo" style="flex:1; background:#d91f26; color:#fff; border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer;">Adicionar</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+
+    // === LÓGICA INTERNA DO MODAL ===
+    const inputQtd = document.getElementById('promo-quantidade');
+    const subtotalEl = document.getElementById('promo-subtotal');
+    let unidadeAtual = 'g'; // 'g' ou 'kg' (para itens por kg)
+    let tipoCorte = 'Inteiro';
+
+    // Alternar unidade (g / kg)
+    if (isKg) {
+        const labelG = document.getElementById('label-g');
+        const labelKg = document.getElementById('label-kg');
+        const radioG = document.getElementById('promo-unidade-g');
+        const radioKg = document.getElementById('promo-unidade-kg');
+        const labelQtdEl = document.getElementById('promo-label-qtd');
+        
+        radioG.addEventListener('change', () => {
+            unidadeAtual = 'g';
+            labelG.style.background = '#fff';
+            labelG.style.color = '#d91f26';
+            labelG.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+            labelKg.style.background = 'transparent';
+            labelKg.style.color = '#777';
+            labelKg.style.boxShadow = 'none';
+            labelQtdEl.textContent = 'Quantidade (g)';
+            inputQtd.placeholder = 'Ex: 500';
+            calcular();
+        });
+        
+        radioKg.addEventListener('change', () => {
+            unidadeAtual = 'kg';
+            labelKg.style.background = '#fff';
+            labelKg.style.color = '#d91f26';
+            labelKg.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+            labelG.style.background = 'transparent';
+            labelG.style.color = '#777';
+            labelG.style.boxShadow = 'none';
+            labelQtdEl.textContent = 'Quantidade (kg)';
+            inputQtd.placeholder = 'Ex: 0,5';
+            calcular();
+        });
+    }
+
+    // Botões de quantidade rápida
+    document.querySelectorAll('.promo-qtd-rapida').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const qtd = parseFloat(btn.getAttribute('data-qtd'));
+            if (unidadeAtual === 'g') inputQtd.value = qtd;
+            else inputQtd.value = qtd / 1000;
+            calcular();
+        });
+    });
+
+    // Tipo de corte
+    document.querySelectorAll('.promo-corte-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.promo-corte-btn').forEach(b => {
+                b.style.background = '#f4f5f7';
+                b.style.color = '#333';
+                b.style.borderColor = '#e6e8eb';
+            });
+            btn.style.background = '#d91f26';
+            btn.style.color = '#fff';
+            btn.style.borderColor = '#d91f26';
+            tipoCorte = btn.previousElementSibling.value;
+        });
+    });
+
+    // Calcular subtotal
+    function calcular() {
+        const qtd = parseFloat(inputQtd.value) || 0;
+        let quantidadeKg;
+        if (isKg) {
+            quantidadeKg = unidadeAtual === 'g' ? qtd / 1000 : qtd;
+        } else {
+            quantidadeKg = qtd;
+        }
+        const subtotal = parsed.valor * quantidadeKg;
+        subtotalEl.textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+    }
+
+    inputQtd.addEventListener('input', calcular);
+
+    // Fechar modal
+    document.getElementById('fechar-modal-promo').addEventListener('click', () => modal.remove());
+    document.getElementById('cancelar-modal-promo').addEventListener('click', () => modal.remove());
+
+    // Confirmar adição
+    document.getElementById('confirmar-modal-promo').addEventListener('click', () => {
+        const qtd = parseFloat(inputQtd.value) || 0;
+        if (qtd <= 0) { alert('Informe uma quantidade válida.'); return; }
+        
+        let quantidadeKg, quantidadeExibir;
+        if (isKg) {
+            quantidadeKg = unidadeAtual === 'g' ? qtd / 1000 : qtd;
+            quantidadeExibir = unidadeAtual === 'g' ? `${qtd}g` : `${qtd}kg`;
+        } else {
+            quantidadeKg = qtd;
+            quantidadeExibir = `${qtd} un`;
+        }
+        
+        const subtotal = parsed.valor * quantidadeKg;
+        const observacao = document.getElementById('promo-observacao').value.trim();
+        
+        const itemCarrinho = {
+            id: `promo_${promoId}_${itemIndex}`,
+            nome: item.nome,
+            imagem: promo.imagem,
+            precoKg: parsed.valor,
+            unidade: isKg ? (unidadeAtual === 'g' ? 'g' : 'kg') : 'un',
+            quantidadeKg: quantidadeKg,
+            quantidadeExibir: quantidadeExibir,
+            subtotal: subtotal,
+            tipoCorte: isKg ? tipoCorte : '',
+            observacao: observacao
+        };
+        
+        carrinho.push(itemCarrinho);
+        salvarCarrinho();
+        atualizarCarrinho();
+        modal.remove();
+        mostrarToast(`${item.nome} adicionado!`);
+    });
+};
+
+// ============================================
+// TELA DE DETALHES (KITS)
+// ============================================
 window.abrirDetalhes = function(id) {
     const prod = produtos.find(p => p.id === id);
     if (!prod) { console.error('Produto não encontrado:', id); return; }
@@ -373,8 +674,7 @@ window.abrirDetalhes = function(id) {
     document.getElementById('det-img').src = prod.imagem;
     document.getElementById('det-nome').textContent = prod.nome;
     document.getElementById('det-preco').textContent = `R$ ${prod.precoNumerico.toFixed(2).replace('.', ',')}`;
-    
-    // Label dinâmico: Serve / Volume / Peso-Qtd
+
     const labelServe = document.querySelector('.detalhes-card-info:nth-child(2) .label');
     if (labelServe) {
         if (tipoCat === 'kit') labelServe.textContent = 'Serve';
@@ -416,7 +716,9 @@ window.toggleInfo = function(elementId) {
     el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
+// ============================================
 // LIGHTBOX
+// ============================================
 window.abrirLightbox = function(urlImagem) {
     let lightbox = document.getElementById('lightbox-modal');
     if (!lightbox) {
@@ -441,12 +743,13 @@ window.fecharLightbox = function() {
     if (lightbox) lightbox.classList.remove('show');
 };
 
-// MODAL DE ADIÇÃO
+// ============================================
+// MODAL DE ADIÇÃO PADRÃO
+// ============================================
 window.abrirModalPeso = function(produtoId, qtdPreDefinida = null) {
     const prod = produtos.find(p => p.id === produtoId);
-    if (!prod) return;
+    if (!prod) { console.error('Produto não encontrado:', produtoId); return; }
     produtoAtual = prod;
-
     const cat = categorias.find(c => c.id === prod.menuId);
     const tipoCat = getTipoCategoria(cat ? cat.nome : '');
 
@@ -459,13 +762,9 @@ window.abrirModalPeso = function(produtoId, qtdPreDefinida = null) {
     const opcoesCorte = document.getElementById('opcoes-corte-wrapper');
     const qtdRapida = document.getElementById('qtd-rapida-wrapper');
 
-    // REGRAS:
-    // - Carnes (Bovino, Suíno, Aves, Assados) OU qualquer produto em kg → peso + corte
-    // - Kits, Bebidas, Mercearia, Hortifruti → quantidade em unidades (sem corte)
     const isCarne = tipoCat === 'carne' || prod.unidade === 'kg';
-    const isPeso = isCarne; // se a categoria é carne OU o preço é em kg, usa peso
 
-    if (isPeso) {
+    if (isCarne) {
         wrapperUnidade.style.display = 'block';
         opcoesCorte.style.display = 'block';
         if (qtdRapida) qtdRapida.style.display = 'flex';
@@ -538,7 +837,9 @@ window.confirmarAdicao = function() {
     mostrarToast(`${produtoAtual.nome} adicionado!`);
 }
 
+// ============================================
 // CARRINHO
+// ============================================
 function atualizarCarrinho() {
     const badge = document.getElementById('badge-carrinho');
     if (badge) {
@@ -606,7 +907,9 @@ function carregarCarrinhoSalvo() {
     } catch (e) { carrinho = []; }
 }
 
+// ============================================
 // MODAL DE ENDEREÇO
+// ============================================
 window.abrirModalEndereco = function() {
     if (carrinho.length === 0) { alert('Seu carrinho está vazio!'); return; }
     window.fecharCarrinho();
@@ -621,12 +924,11 @@ window.abrirModalEndereco = function() {
     new bootstrap.Modal(document.getElementById('modalEndereco')).show();
 }
 
+// ============================================
 // ENVIAR PEDIDO WHATSAPP
+// ============================================
 window.enviarPedidoWhatsApp = function() {
-    if (!statusLoja.aberto) {
-        alert('A loja está fechada no momento. Volte no horário de funcionamento para fazer seu pedido.');
-        return;
-    }
+    if (!statusLoja.aberto) { alert('A loja está fechada no momento. Volte no horário de funcionamento para fazer seu pedido.'); return; }
     const nome = document.getElementById('cli-nome').value.trim();
     const rua = document.getElementById('cli-rua').value.trim();
     const numero = document.getElementById('cli-numero').value.trim();
@@ -657,9 +959,7 @@ window.enviarPedidoWhatsApp = function() {
     mensagem += `🏘️ Bairro: ${bairro}\n`;
     if (complemento) mensagem += `🏠 Complemento: ${complemento}\n`;
     mensagem += `💳 Pagamento: ${pagamento}\n`;
-    if (pagamento === 'Dinheiro' && troco > 0) {
-        mensagem += `💵 Troco para: R$ ${troco.toFixed(2).replace('.', ',')}\n`;
-    }
+    if (pagamento === 'Dinheiro' && troco > 0) mensagem += `💵 Troco para: R$ ${troco.toFixed(2).replace('.', ',')}\n`;
     mensagem += `\n----------------------------------------\n\n`;
     mensagem += `*ITENS DO PEDIDO:*\n`;
     carrinho.forEach(item => {
@@ -684,25 +984,35 @@ window.enviarPedidoWhatsApp = function() {
     window.open(url, '_blank');
 }
 
+// ============================================
 // TOAST
+// ============================================
 function mostrarToast(texto) {
     const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-        background: #25D366; color: #fff; padding: 12px 24px; border-radius: 30px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: 600;
-        font-size: 0.9rem; transition: transform 0.3s ease; white-space: nowrap;
-    `;
+    toast.style.cssText = `position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #25D366; color: #fff; padding: 12px 24px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: 600; font-size: 0.9rem; transition: transform 0.3s ease; white-space: nowrap;`;
     toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${texto}`;
     document.body.appendChild(toast);
     setTimeout(() => toast.style.transform = 'translateX(-50%) translateY(20px)', 10);
-    setTimeout(() => {
-        toast.style.transform = 'translateX(-50%) translateY(-100px)';
-        setTimeout(() => toast.remove(), 300);
-    }, 2500);
+    setTimeout(() => { toast.style.transform = 'translateX(-50%) translateY(-100px)'; setTimeout(() => toast.remove(), 300); }, 2500);
 }
 
+// ============================================
+// EVENT DELEGATION: botão "+" da promoção
+// ============================================
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-promo-add');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const promoId = btn.getAttribute('data-promo-id');
+    const itemIndex = parseInt(btn.getAttribute('data-item-index'));
+    console.log('Clique no item da promoção:', promoId, itemIndex);
+    window.abrirModalPesoPromo(promoId, itemIndex);
+});
+
+// ============================================
 // INICIALIZAÇÃO
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     carregarDados();
     ouvirStatusLoja();
@@ -711,7 +1021,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const carousel = document.getElementById('bannerCarousel');
     const dots = document.querySelectorAll('.banner-dots .dot');
     const items = document.querySelectorAll('.banner-item');
-
     if (carousel && items.length > 0) {
         let currentIndex = 0;
         let autoScrollInterval;

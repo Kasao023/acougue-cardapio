@@ -403,16 +403,27 @@ body {
 .categoria-titulo-promo i { animation: pulse-fogo 1.5s infinite; }
 @keyframes pulse-fogo { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 
-/* CARROSSEL HORIZONTAL DE PROMOÇÕES */
-.lista-promocoes { display: flex; flex-direction: row; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 10px; margin-bottom: 10px; }
-.lista-promocoes::-webkit-scrollbar { display: none; }
-.promo-card { flex: 0 0 42%; max-width: 170px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(217, 31, 38, 0.15); border: 1.5px solid var(--vermelho); background: #fff; transition: transform 0.2s; scroll-snap-align: start; }
-.promo-card:active { transform: scale(0.98); }
-.promo-imagem { width: 100%; height: 140px; display: block; object-fit: cover; }
+/* ARTE DA PROMOÇÃO - TAMANHO FIXO PEQUENO */
+.promo-arte-only {
+    width: 42% !important;
+    max-width: 170px !important;
+    height: 140px !important;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(217, 31, 38, 0.15);
+    border: 1.5px solid var(--vermelho);
+    background: #fff;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+.promo-arte-only img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
 
-/* ========================================================= */
-/* ============ FEEDBACK VISUAL NOS BOTÕES ================= */
-/* ========================================================= */
+/* ============ FEEDBACK VISUAL NOS BOTÕES ============ */
 #btn-confirmar-adicao { transition: background-color 0.3s, transform 0.2s; }
 #btn-confirmar-adicao:disabled { cursor: not-allowed; opacity: 0.9; }
 .btn-adicionar.adicionado { background: #25D366 !important; color: #fff !important; border-color: #25D366 !important; transform: scale(0.95); }

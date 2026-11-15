@@ -10,27 +10,21 @@
     <style>
         :root { --vermelho: #d91f26; --escuro: #222222; --cinza: #f4f5f7; }
         body { font-family: 'Poppins', sans-serif; background: var(--cinza); padding-bottom: 30px; }
-        
         .header-admin { background: var(--escuro); color: #fff; padding: 15px; text-align: center; border-bottom: 3px solid var(--vermelho); margin-bottom: 20px; position: sticky; top: 0; z-index: 1000; }
         .header-admin h2 { font-size: 1.2rem; margin: 0; font-weight: 700; }
-        
         #tela-login { position: fixed; inset: 0; background: var(--escuro); display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; }
         .login-box { background: #fff; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
         .login-box img { width: 100px; margin-bottom: 15px; border-radius: 50%; }
-
         .abas-admin { display: flex; gap: 6px; margin-bottom: 15px; flex-wrap: wrap; }
         .aba-admin-btn { flex: 1; min-width: 100px; padding: 12px 8px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; background: #fff; color: #777; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .aba-admin-btn.ativo { background: var(--vermelho); color: #fff; box-shadow: 0 4px 10px rgba(217,31,38,0.3); }
-
         .ferramentas-admin { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 60px; z-index: 999; }
         .busca-admin { position: relative; margin-bottom: 10px; }
         .busca-admin i { position: absolute; left: 12px; top: 12px; color: #999; }
         .busca-admin input { width: 100%; padding: 10px 10px 10px 35px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9; font-size: 0.9rem; outline: none; }
-        
         .filtros-categorias { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; }
         .filtro-chip { background: #f0f0f0; border: 1px solid #ddd; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer; color: #555; transition: 0.2s; }
         .filtro-chip.ativo { background: var(--vermelho); color: #fff; border-color: var(--vermelho); }
-
         .admin-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid var(--vermelho); display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .admin-card.esgotado { opacity: 0.7; border-left-color: #999; }
         .admin-card.tipo-kit { border-left-color: #0d6efd; }
@@ -38,7 +32,6 @@
         .admin-card.tipo-cat { border-left-color: #20c997; }
         .admin-card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
         .admin-card img.grayscale { filter: grayscale(1); }
-        
         .btn-acao { border: none; border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 0.85rem; transition: 0.15s; }
         .btn-acao:active { transform: scale(0.95); }
         .btn-editar { background: #ffeeba; color: #856404; }
@@ -47,9 +40,7 @@
         .btn-esgotado { background: #fff3cd; color: #856404; }
         .btn-subir { background: #d1ecf1; color: #0c5460; }
         .btn-descer { background: #e2e3e5; color: #383d41; }
-        
         .img-preview { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; border: 2px dashed #ddd; background: #f9f9f9; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.8rem; }
-        
         .d-none { display: none !important; }
         .badge-esgotado { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; }
         .badge-kit { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; background: #0d6efd; color: white; }
@@ -57,7 +48,6 @@
         .badge-cat { font-size: 0.65rem; padding: 3px 8px; margin-left: 6px; vertical-align: middle; background: #20c997; color: white; }
         .progresso { height: 6px; background: #eee; border-radius: 3px; overflow: hidden; margin-top: 5px; display: none; }
         .progresso-bar { height: 100%; background: var(--vermelho); width: 0%; transition: width 0.3s; }
-
         .painel-status { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 2px solid transparent; transition: all 0.3s; }
         .painel-status.aberto { border-color: #1a7f37; background: linear-gradient(135deg, #f0fff4 0%, #fff 100%); }
         .painel-status.fechado { border-color: var(--vermelho); background: linear-gradient(135deg, #fff5f5 0%, #fff 100%); }
@@ -71,10 +61,55 @@
         .painel-status .botoes-status button.ativo.aberto { background: #1a7f37; border-color: #1a7f37; }
         .painel-status .botoes-status button.ativo.fechado { background: var(--vermelho); border-color: var(--vermelho); }
         .painel-status .botoes-status button.ativo.auto { background: #ffc107; border-color: #ffc107; color: #222; }
-
         .cat-info { display: flex; flex-direction: column; gap: 2px; }
         .cat-info .cat-nome { font-weight: 700; color: var(--escuro); font-size: 0.95rem; }
         .cat-info .cat-meta { font-size: 0.75rem; color: #777; }
+
+        /* ITENS DA PROMOÇÃO NO MODAL */
+        .itens-promo-lista {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fafafa;
+            margin-bottom: 10px;
+        }
+        .item-promo-linha {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 4px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85rem;
+            gap: 8px;
+        }
+        .item-promo-linha:last-child { border-bottom: none; }
+        .item-promo-linha .item-nome { font-weight: 600; flex: 1; }
+        .item-promo-linha .item-preco { color: var(--vermelho); font-weight: 700; white-space: nowrap; }
+        .item-promo-linha .btn-remover-item-promo { background: none; border: none; color: #999; padding: 0 5px; }
+        .adicionar-item-promo {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .adicionar-item-promo input {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        .adicionar-item-promo input.preco { flex: 0 0 110px; }
+        .adicionar-item-promo button {
+            background: var(--vermelho);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0 15px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
@@ -199,7 +234,7 @@
         </div>
     </div>
 
-    <!-- MODAL PROMOÇÃO -->
+    <!-- MODAL PROMOÇÃO (com itens individuais) -->
     <div class="modal fade" id="modalPromo" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="border-radius: 15px; border: none;">
@@ -217,6 +252,18 @@
                         <div id="preview-promo-container">
                             <img id="promo-preview" class="img-preview" src="" alt="Prévia" style="display: none;">
                             <div id="promo-no-img-text" class="img-preview">Nenhuma imagem selecionada</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Itens da Promoção</label>
+                        <div class="adicionar-item-promo">
+                            <input type="text" id="novo-item-nome" placeholder="Nome do item" class="item-nome">
+                            <input type="text" id="novo-item-preco" placeholder="Preço (ex: 39,99 kg)" class="preco">
+                            <button type="button" onclick="adicionarItemNaPromo()"><i class="bi bi-plus-lg"></i></button>
+                        </div>
+                        <div class="itens-promo-lista" id="itens-promo-lista">
+                            <p class="text-muted small text-center mb-0">Nenhum item adicionado ainda.</p>
                         </div>
                     </div>
                 </div>
@@ -241,7 +288,6 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Nome da Categoria</label>
                         <input type="text" id="cat-nome" class="form-control" placeholder="Ex: Bebidas, Mercearia, Temperos...">
-                        <small class="text-muted" style="font-size: 0.7rem;">Aparece como título no cardápio e como filtro.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -278,6 +324,9 @@
         let promocoesGlobais = [];
         let filtroAtual = 'todos';
 
+        // Variável temporária com os itens da promoção que está sendo editada
+        let itensPromoAtual = [];
+
         // ============================================
         // LOGIN
         // ============================================
@@ -310,7 +359,7 @@
         });
 
         // ============================================
-        // SEED: CRIA CATEGORIAS PADRÃO SE NÃO EXISTIREM
+        // SEED
         // ============================================
         function seedCategorias() {
             return db.ref('Category').once('value').then(snap => {
@@ -319,7 +368,6 @@
                     const val = c.val();
                     if (val && val.name) existentes.push(val.name.toLowerCase());
                 });
-
                 const padrao = [
                     { nome: 'Kits da Semana', ordem: 0 },
                     { nome: 'Kits Churrasco', ordem: 1 },
@@ -331,7 +379,6 @@
                     { nome: 'Aves', ordem: 7 },
                     { nome: 'Assados e Domingos', ordem: 8 }
                 ];
-
                 const promises = [];
                 padrao.forEach(cat => {
                     if (!existentes.includes(cat.nome.toLowerCase())) {
@@ -343,7 +390,7 @@
         }
 
         // ============================================
-        // STATUS DA LOJA
+        // STATUS
         // ============================================
         function ouvirStatusAdmin() {
             db.ref('config/lojaStatus').on('value', snap => {
@@ -733,7 +780,11 @@
                 if (snap.exists()) {
                     snap.forEach(p => {
                         const val = p.val();
-                        if (val.imagem) promocoesGlobais.push({ id: p.key, imagem: val.imagem });
+                        if (val.imagem) promocoesGlobais.push({ 
+                            id: p.key, 
+                            imagem: val.imagem,
+                            itens: val.itens || []
+                        });
                     });
                 }
                 renderizarListaPromocoes();
@@ -748,13 +799,14 @@
             }
             let html = '';
             promocoesGlobais.forEach(p => {
+                const qtdItens = p.itens ? p.itens.length : 0;
                 html += `
                     <div class="admin-card tipo-promo">
                         <div class="d-flex align-items-center gap-3">
                             <img src="${p.imagem}" onerror="this.src='https://placehold.co/60x60/eee/999?text=?'">
                             <div>
                                 <h6 class="mb-0 fw-bold text-dark">Promoção <span class="badge badge-promo">PROMO</span></h6>
-                                <small class="text-muted">ID: ${p.id.substring(0, 8)}...</small>
+                                <small class="text-muted">${qtdItens} item(ns) • ID: ${p.id.substring(0, 8)}...</small>
                             </div>
                         </div>
                         <div class="d-flex gap-2">
@@ -775,6 +827,13 @@
             document.getElementById('promo-preview').style.display = 'none';
             document.getElementById('promo-no-img-text').style.display = 'flex';
             document.getElementById('promo-progresso').style.display = 'none';
+            
+            // Zera a lista de itens
+            itensPromoAtual = [];
+            renderizarItensPromoNoModal();
+            document.getElementById('novo-item-nome').value = '';
+            document.getElementById('novo-item-preco').value = '';
+            
             new bootstrap.Modal(document.getElementById('modalPromo')).show();
         }
 
@@ -786,18 +845,70 @@
             document.getElementById('promo-preview').src = p.imagem;
             document.getElementById('promo-preview').style.display = 'block';
             document.getElementById('promo-no-img-text').style.display = 'none';
+            
+            // Carrega os itens da promoção
+            itensPromoAtual = p.itens ? JSON.parse(JSON.stringify(p.itens)) : [];
+            renderizarItensPromoNoModal();
+            document.getElementById('novo-item-nome').value = '';
+            document.getElementById('novo-item-preco').value = '';
+            
             document.getElementById('promo-file').value = '';
             document.getElementById('promo-progresso').style.display = 'none';
             new bootstrap.Modal(document.getElementById('modalPromo')).show();
+        }
+
+        // Adiciona um item na lista temporária
+        function adicionarItemNaPromo() {
+            const nome = document.getElementById('novo-item-nome').value.trim();
+            const preco = document.getElementById('novo-item-preco').value.trim();
+            
+            if (!nome) { alert('Digite o nome do item.'); return; }
+            if (!preco) { alert('Digite o preço do item.'); return; }
+            
+            itensPromoAtual.push({ nome: nome, preco: preco });
+            document.getElementById('novo-item-nome').value = '';
+            document.getElementById('novo-item-preco').value = '';
+            document.getElementById('novo-item-nome').focus();
+            renderizarItensPromoNoModal();
+        }
+
+        // Remove um item da lista temporária
+        function removerItemDaPromo(index) {
+            itensPromoAtual.splice(index, 1);
+            renderizarItensPromoNoModal();
+        }
+
+        // Renderiza a lista de itens dentro do modal
+        function renderizarItensPromoNoModal() {
+            const lista = document.getElementById('itens-promo-lista');
+            if (itensPromoAtual.length === 0) {
+                lista.innerHTML = `<p class="text-muted small text-center mb-0">Nenhum item adicionado ainda.</p>`;
+                return;
+            }
+            let html = '';
+            itensPromoAtual.forEach((item, idx) => {
+                html += `
+                    <div class="item-promo-linha">
+                        <span class="item-nome">${item.nome}</span>
+                        <span class="item-preco">${item.preco}</span>
+                        <button class="btn-remover-item-promo" onclick="removerItemDaPromo(${idx})"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                `;
+            });
+            lista.innerHTML = html;
         }
 
         async function salvarPromo() {
             const id = document.getElementById('promo-id').value;
             const file = document.getElementById('promo-file').files[0];
             const btnSalvar = document.getElementById('btn-salvar-promo');
+            
             if (!file && !id) { alert("Envie uma imagem para a promoção!"); return; }
+            if (itensPromoAtual.length === 0) { alert("Adicione pelo menos um item à promoção!"); return; }
+            
             btnSalvar.disabled = true;
             btnSalvar.innerText = 'Salvando...';
+            
             try {
                 let imagemFinal = '';
                 if (file) {
@@ -809,9 +920,11 @@
                     const promoAtual = promocoesGlobais.find(p => p.id === id);
                     imagemFinal = promoAtual ? promoAtual.imagem : '';
                 }
-                const dados = { imagem: imagemFinal };
+                const dados = { imagem: imagemFinal, itens: itensPromoAtual };
+                
                 if (id) await db.ref('Promocoes/' + id).update(dados);
                 else await db.ref('Promocoes').push(dados);
+                
                 alert("Promoção salva com sucesso!");
                 bootstrap.Modal.getInstance(document.getElementById('modalPromo')).hide();
                 carregarPromocoes();
@@ -907,7 +1020,6 @@
             const id = document.getElementById('cat-id').value;
             const nome = document.getElementById('cat-nome').value.trim();
             if (!nome) { alert('Informe o nome da categoria.'); return; }
-
             if (id) {
                 db.ref('Category/' + id).once('value').then(snap => {
                     const ordemAtual = snap.val().ordem !== undefined ? snap.val().ordem : 999;
@@ -936,31 +1048,20 @@
             });
         }
 
-        // ============================================
-        // MOVER CATEGORIA (FLUIDEZ OTIMISTA)
-        // ============================================
         function moverCategoria(id, direcao) {
             const index = categoriasGlobais.findIndex(c => c.id === id);
             if (index === -1) return;
             const alvoIndex = index + direcao;
             if (alvoIndex < 0 || alvoIndex >= categoriasGlobais.length) return;
-
-            // Troca na lista local IMEDIATAMENTE (feedback instantâneo)
             const temp = categoriasGlobais[index];
             categoriasGlobais[index] = categoriasGlobais[alvoIndex];
             categoriasGlobais[alvoIndex] = temp;
-
-            // Re-renderiza na hora
             renderizarListaCategorias();
-
-            // Reatribui ordens sequenciais (0, 1, 2, 3...) para todas
             const atualizacoes = {};
             categoriasGlobais.forEach((c, i) => {
                 c.ordem = i;
                 atualizacoes['Category/' + c.id + '/ordem'] = i;
             });
-
-            // Envia para o Firebase (silenciosamente)
             db.ref().update(atualizacoes).catch(err => {
                 console.error('Erro ao reordenar:', err);
                 alert('Erro ao salvar a nova ordem. Tente novamente.');
